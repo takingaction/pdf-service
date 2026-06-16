@@ -1,0 +1,17 @@
+{
+  "name": "pdf-service",
+  "version": "1.0.0",
+  "description": "Puppeteer-based PDF generation service for lesson content",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@sparticuz/chromium": "^119.0.2",
+    "express": "^4.18.2",
+    "puppeteer-core": "^21.6.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
