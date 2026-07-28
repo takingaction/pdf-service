@@ -1,5 +1,11 @@
 /**
  * Builds HTML template for lesson PDF
+ *
+ * Layout:
+ * - Page 1: Title page with "PERFORMERS READY!", course/grade, hero image
+ * - Page 2: 2-column layout (Lesson Outline | Objectives/Vocabulary/Materials)
+ * - Pages 3+: Full-width sections with coral headers
+ * - Footer on all pages
  */
 
 const SECTIONS = [
@@ -20,34 +26,131 @@ const SECTIONS = [
   { key: 'assessment', label: 'Assessment' }
 ];
 
+const PAGE_2_LEFT_SECTIONS = ['lesson_outline'];
+const PAGE_2_RIGHT_SECTIONS = ['learning_objectives', 'vocabulary', 'materials'];
+const REMAINING_SECTIONS = SECTIONS.filter(
+  s => !PAGE_2_LEFT_SECTIONS.includes(s.key) && !PAGE_2_RIGHT_SECTIONS.includes(s.key)
+);
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+
+function buildSectionHtml(section, content) {
+  if (!content || !content.trim()) return '';
+  return `
+    <div class="section">
+      <div class="section-header">${escapeHtml(section.label)}</div>
+      <div class="lesson-content">${content}</div>
+    </div>
+  `;
+}
+
+/**
+ * Build the title page HTML
+ */
+function buildTitlePage({ lesson, course }) {
+  const courseTitle = escapeHtml(course?.title || 'Unknown Course');
+  const grade = course?.grade || 'N/A';
+  const discipline = course?.discipline || 'N/A';
+  const imageUrl = course?.image_url || null;
+
+  return `
+    <div class="title-page">
+      <div class="title-content">
+        <h1 class="performers-ready">PERFORMERS READY!</h1>
+        <h2 class="course-info">${courseTitle} | ${grade}</h2>
+      </div>
+      ${imageUrl ? `<div class="hero-image-container"><img src="${escapeHtml(imageUrl)}" alt="${courseTitle}" class="hero-image" /></div>` : '<div class="hero-image-placeholder"></div>'}
+    </div>
+  `;
+}
+
+/**
+ * Build page 2 with 2-column layout
+ */
+function buildPage2Html({ lesson }) {
+  const leftContent = PAGE_2_LEFT_SECTIONS
+    .map(key => {
+      const section = SECTIONS.find(s => s.key === key);
+      return buildSectionHtml(section, lesson[key]);
+    })
+    .filter(Boolean)
+    .join('');
+
+  const rightContent = PAGE_2_RIGHT_SECTIONS
+    .map(key => {
+      const section = SECTIONS.find(s => s.key === key);
+      return buildSectionHtml(section, lesson[key]);
+    })
+    .filter(Boolean)
+    .join('');
+
+  return `
+    <div class="page2-container">
+      <div class="two-column">
+        <div class="left-column">
+          ${leftContent}
+        </div>
+        <div class="right-column">
+          ${rightContent}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Build remaining sections as full-width
+ */
+function buildRemainingSectionsHtml({ lesson }) {
+  const sectionsHtml = REMAINING_SECTIONS
+    .map(section => buildSectionHtml(section, lesson[section.key]))
+    .filter(Boolean)
+    .join('');
+
+  return `
+    <div class="remaining-sections">
+      ${sectionsHtml}
+    </div>
+  `;
+}
+
 /**
  * Build complete HTML document for a lesson
  * @param {Object} data - { lesson, course }
  * @returns {string} Complete HTML document
  */
 function buildLessonPDFHtml({ lesson, course }) {
-  const sectionsHtml = SECTIONS
-    .filter(section => lesson[section.key] && lesson[section.key].trim())
-    .map(section => `
-      <div class="section">
-        <h2>${section.label}</h2>
-        <div class="lesson-content">
-          ${lesson[section.key]}
-        </div>
-      </div>
-    `)
-    .join('\n');
+  const titlePage = buildTitlePage({ lesson, course });
+  const page2Html = buildPage2Html({ lesson });
+  const remainingHtml = buildRemainingSectionsHtml({ lesson });
 
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lesson ${lesson.lesson_number}: ${lesson.title || 'Untitled'}</title>
+  <title>Lesson ${lesson.lesson_number}: ${escapeHtml(lesson.title || 'Untitled')}</title>
   <style>
     @page {
       size: letter;
-      margin: 0.75in;
+      margin: 0.5in;
+      margin-top: 0.4in;
+      margin-bottom: 0.6in;
+    }
+
+    @page :first {
+      size: letter;
+      margin: 0;
     }
 
     * {
@@ -57,54 +160,112 @@ function buildLessonPDFHtml({ lesson, course }) {
     body {
       font-family: Arial, Helvetica, sans-serif;
       font-size: 11pt;
-      line-height: 1.5;
+      line-height: 1.4;
       color: #333;
       margin: 0;
       padding: 0;
     }
 
-    .header {
-      margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: 2px solid #333;
+    /* Title Page */
+    .title-page {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
     }
 
-    .header h1 {
-      font-size: 22pt;
+    .title-content {
+      padding-top: 1.2in;
+      padding-left: 0.75in;
+      padding-right: 0.75in;
+      text-align: center;
+    }
+
+    .performers-ready {
+      font-size: 32pt;
       font-weight: bold;
-      margin: 0 0 8px 0;
-      color: #111;
+      color: #0d7377;
+      margin: 0 0 24px 0;
+      letter-spacing: 2px;
     }
 
-    .meta {
-      font-size: 10pt;
-      color: #555;
-    }
-
-    .meta strong {
+    .course-info {
+      font-size: 18pt;
+      font-weight: normal;
       color: #333;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
+    .hero-image-container {
+      flex: 1;
+      width: 100%;
+      overflow: hidden;
+      margin-top: 40px;
+    }
+
+    .hero-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .hero-image-placeholder {
+      flex: 1;
+      background-color: #f5f5f5;
+    }
+
+    /* Page 2 - Two Column */
+    .page2-container {
+      page-break-after: always;
+      min-height: calc(100vh - 1in);
+    }
+
+    .two-column {
+      display: flex;
+      gap: 24px;
+      height: 100%;
+    }
+
+    .left-column {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .right-column {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Section Styling */
     .section {
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
 
-    .section h2 {
-      font-size: 13pt;
+    .section-header {
+      background-color: #e37c64;
+      color: white;
+      font-size: 11pt;
       font-weight: bold;
-      margin: 0 0 8px 0;
-      padding-bottom: 4px;
-      border-bottom: 1px solid #ccc;
-      color: #222;
+      text-transform: uppercase;
+      padding: 8px 12px;
+      margin-bottom: 8px;
     }
 
     .lesson-content {
-      font-size: 11pt;
-      line-height: 1.5;
+      font-size: 10pt;
+      line-height: 1.4;
     }
 
     .lesson-content p {
-      margin: 0 0 8px 0;
+      margin: 0 0 6px 0;
     }
 
     .lesson-content p:empty {
@@ -115,30 +276,30 @@ function buildLessonPDFHtml({ lesson, course }) {
     .lesson-content h3 {
       font-size: 11pt;
       font-weight: bold;
-      margin: 12px 0 4px 0;
+      margin: 10px 0 4px 0;
     }
 
     .lesson-content ul,
     .lesson-content ol {
-      margin: 0 0 8px 0;
-      padding-left: 24px;
+      margin: 0 0 6px 0;
+      padding-left: 20px;
     }
 
     .lesson-content li {
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
     .lesson-content table {
       width: 100%;
       border-collapse: collapse;
-      margin: 8px 0;
+      margin: 6px 0;
       font-size: 10pt;
     }
 
     .lesson-content td,
     .lesson-content th {
       border: 1px solid #333;
-      padding: 6px 8px;
+      padding: 5px 7px;
       vertical-align: top;
     }
 
@@ -154,12 +315,12 @@ function buildLessonPDFHtml({ lesson, course }) {
 
     .lesson-content img[style*="float: right"] {
       float: right;
-      margin-left: 12px;
+      margin-left: 10px;
     }
 
     .lesson-content img[style*="float: left"] {
       float: left;
-      margin-right: 12px;
+      margin-right: 10px;
     }
 
     .lesson-content img[style*="display: block; margin-left: auto; margin-right: auto"] {
@@ -169,7 +330,7 @@ function buildLessonPDFHtml({ lesson, course }) {
     }
 
     .lesson-content a {
-      color: #0066cc;
+      color: #0d7377;
       text-decoration: underline;
     }
 
@@ -181,14 +342,6 @@ function buildLessonPDFHtml({ lesson, course }) {
     .lesson-content em,
     .lesson-content i {
       font-style: italic;
-    }
-
-    /* CFU Block styling */
-    .lesson-content [data-cfu-id] {
-      background-color: #f9f9f9;
-      border-left: 4px solid #666;
-      padding: 12px 16px;
-      margin: 12px 0;
     }
 
     /* Lists with indentation support */
@@ -215,39 +368,38 @@ function buildLessonPDFHtml({ lesson, course }) {
     .lesson-content ol ol ol {
       list-style-type: lower-roman;
     }
+
+    /* CFU Block styling */
+    .lesson-content [data-cfu-id] {
+      background-color: #f9f9f9;
+      border-left: 4px solid #666;
+      padding: 10px 14px;
+      margin: 10px 0;
+    }
+
+    /* Remaining sections */
+    .remaining-sections {
+      margin-top: 0;
+    }
+
+    .remaining-sections .section {
+      margin-bottom: 20px;
+    }
+
+    /* Footer handling via Puppeteer */
+    .footer {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1>Lesson ${lesson.lesson_number}: ${escapeHtml(lesson.title || 'Untitled')}</h1>
-    <p class="meta">
-      <strong>Course:</strong> ${escapeHtml(course?.title || 'Unknown Course')} |
-      <strong>Grade:</strong> ${course?.grade || 'N/A'} |
-      <strong>Discipline:</strong> ${course?.discipline || 'N/A'}
-      ${lesson.total_time ? `| <strong>Time:</strong> ${escapeHtml(lesson.total_time)}` : ''}
-    </p>
-  </div>
-
-  ${sectionsHtml}
+  ${titlePage}
+  ${page2Html}
+  ${remainingHtml}
 </body>
 </html>`;
 
   return html;
-}
-
-/**
- * Escape HTML special characters
- */
-function escapeHtml(text) {
-  if (!text) return '';
-  const map = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;'
-  };
-  return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
 module.exports = {

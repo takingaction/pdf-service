@@ -26,10 +26,13 @@ app.get('/health', (req, res) => {
  * Generate PDF from HTML
  * @param {string} html - HTML content
  * @param {string} filename - filename for the PDF
+ * @param {Object} options - { footerHtml, displayHeaderFooter }
  * @returns {Promise<{pdf: Buffer, filename: string}>}
  */
-async function generatePDF(html, filename = 'document.pdf') {
+async function generatePDF(html, filename = 'document.pdf', options = {}) {
   let browser = null;
+
+  const { footerHtml = null, displayHeaderFooter = false } = options;
 
   try {
     browser = await puppeteer.launch({
@@ -48,16 +51,24 @@ async function generatePDF(html, filename = 'document.pdf') {
 
     await page.waitForTimeout(500);
 
-    const pdf = await page.pdf({
+    const pdfOptions = {
       format: 'Letter',
       printBackground: true,
       margin: {
-        top: '0.75in',
-        right: '0.75in',
-        bottom: '0.75in',
-        left: '0.75in'
+        top: '0.5in',
+        right: '0.5in',
+        bottom: '0.6in',
+        left: '0.5in'
       }
-    });
+    };
+
+    if (displayHeaderFooter && footerHtml) {
+      pdfOptions.displayHeaderFooter = true;
+      pdfOptions.footerTemplate = footerHtml;
+      pdfOptions.headerTemplate = '<div></div>'; // Empty header
+    }
+
+    const pdf = await page.pdf(pdfOptions);
 
     await browser.close();
 
@@ -73,6 +84,38 @@ async function generatePDF(html, filename = 'document.pdf') {
     }
     throw error;
   }
+}
+
+/**
+ * Build footer HTML for Puppeteer
+ */
+function buildFooterHtml(course, lesson) {
+  const courseTitle = course?.title || 'Unknown Course';
+  const grade = course?.grade || 'N/A';
+  const lessonNum = lesson?.lesson_number || '1';
+
+  return `
+    <div style="width: 100%; font-size: 9pt; font-family: Arial, Helvetica, sans-serif; padding: 0 0.25in;">
+      <div style="float: left; color: #333;">
+        ${escapeHtml(courseTitle).toUpperCase()} | ${grade} | LESSON ${lessonNum}
+      </div>
+      <div style="float: right; color: #333;">
+        PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span>
+      </div>
+    </div>
+  `;
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
 /**
@@ -124,7 +167,13 @@ app.post('/lesson-pdf', async (req, res) => {
     const safeFilename = filename ||
       `${lesson.title || `Lesson-${lesson.lesson_number}`}.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
 
-    const { pdf } = await generatePDF(html, safeFilename);
+    // Build footer with course/lesson info
+    const footerHtml = buildFooterHtml(course, lesson);
+
+    const { pdf } = await generatePDF(html, safeFilename, {
+      footerHtml,
+      displayHeaderFooter: true
+    });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
