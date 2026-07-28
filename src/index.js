@@ -217,6 +217,68 @@ app.post('/debug-html', (req, res) => {
   }
 });
 
+/**
+ * Test page numbers - simple test to verify Puppeteer page numbers work
+ * GET /test-page-numbers
+ */
+app.get('/test-page-numbers', async (req, res) => {
+  const testHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        @page { size: letter; margin: 0.5in; }
+        body { font-family: Arial; }
+        .content { height: 9in; }
+      </style>
+    </head>
+    <body>
+      <div class="content">Page 1 content</div>
+      <div class="content">Page 2 content</div>
+      <div class="content">Page 3 content</div>
+    </body>
+    </html>
+  `;
+
+  const footerHtml = `
+    <div style="width: 100%; font-size: 9pt; font-family: Arial; display: flex; justify-content: space-between;">
+      <span>COURSE | GRADE | LESSON 1</span>
+      <span>PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span></span>
+    </div>
+  `;
+
+  let browser = null;
+  try {
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(testHtml, { waitUntil: 'networkidle0' });
+
+    const pdf = await page.pdf({
+      format: 'Letter',
+      printBackground: true,
+      margin: { top: '0.5in', right: '0.5in', bottom: '0.6in', left: '0.5in' },
+      displayHeaderFooter: true,
+      footerTemplate: footerHtml,
+      headerTemplate: '<div></div>',
+    });
+
+    await browser.close();
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename=test-page-numbers.pdf');
+    res.send(pdf);
+  } catch (error) {
+    if (browser) await browser.close();
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`PDF service running on port ${PORT}`);
