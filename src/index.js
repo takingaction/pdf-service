@@ -6,7 +6,6 @@
 const express = require('express');
 const puppeteer = require('puppeteer-core');
 const chromium = require('@sparticuz/chromium');
-const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const { buildLessonPDFHtml } = require('./template');
 
 const app = express();
@@ -69,16 +68,11 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
       pdfOptions.headerTemplate = '<div></div>'; // Empty header
     }
 
-    let pdfBuffer = await page.pdf(pdfOptions);
+    const pdf = await page.pdf(pdfOptions);
 
     await browser.close();
 
-    // If footer was requested, add page numbers using pdf-lib
-    if (displayHeaderFooter && footerHtml) {
-      pdfBuffer = await addPageNumbers(pdfBuffer, footerHtml);
-    }
-
-    return { pdf: pdfBuffer, filename };
+    return { pdf, filename };
 
   } catch (error) {
     if (browser) {
@@ -90,53 +84,6 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
     }
     throw error;
   }
-}
-
-/**
- * Add page numbers to PDF using pdf-lib
- */
-async function addPageNumbers(pdfBuffer, footerHtml) {
-  const pdfDoc = await PDFDocument.load(pdfBuffer);
-  const pages = pdfDoc.getPages();
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const fontSize = 9;
-
-  // Parse footer info from HTML
-  const courseMatch = footerHtml.match(/>([^<]+)\|/);
-  const courseText = courseMatch ? courseMatch[1].trim().toUpperCase() : 'COURSE';
-  const gradeMatch = footerHtml.match(/\|([^|]+)\|/);
-  const gradeText = gradeMatch ? gradeMatch[1].trim() : '';
-  const lessonMatch = footerHtml.match(/LESSON\s*(\d+)/i);
-  const lessonText = lessonMatch ? `LESSON ${lessonMatch[1]}` : '';
-
-  for (let i = 0; i < pages.length; i++) {
-    const page = pages[i];
-    const { width, height } = page.getSize();
-    const pageNum = i + 1;
-    const totalPages = pages.length;
-
-    // Draw footer text
-    const leftText = `${courseText} | ${gradeText} | ${lessonText}`;
-    const rightText = `PAGE ${pageNum} OF ${totalPages}`;
-
-    page.drawText(leftText, {
-      x: 36, // 0.5in margin
-      y: 20,
-      size: fontSize,
-      font: font,
-      color: rgb(0.2, 0.2, 0.2),
-    });
-
-    page.drawText(rightText, {
-      x: width - 36 - fontSize * rightText.length * 0.5,
-      y: 20,
-      size: fontSize,
-      font: font,
-      color: rgb(0.2, 0.2, 0.2),
-    });
-  }
-
-  return pdfDoc.save();
 }
 
 /**
@@ -267,98 +214,6 @@ app.post('/debug-html', (req, res) => {
       error: 'Failed to build HTML',
       message: error.message
     });
-  }
-});
-
-/**
- * Test page numbers - test endpoint to verify pdf-lib page numbers
- * GET /test-page-numbers
- */
-app.get('/test-page-numbers', async (req, res) => {
-  const testHtml = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <style>
-        @page { size: letter; margin: 0.5in; }
-        body { font-family: Arial; }
-        .content { height: 9in; }
-      </style>
-    </head>
-    <body>
-      <div class="content">Page 1 content</div>
-      <div class="content">Page 2 content</div>
-      <div class="content">Page 3 content</div>
-    </body>
-    </html>
-  `;
-
-  let browser = null;
-  try {
-    browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
-    });
-
-    const page = await browser.newPage();
-    await page.setContent(testHtml, { waitUntil: 'networkidle0' });
-
-    // Use Puppeteer's footer template (empty, will be replaced by pdf-lib)
-    const footerHtml = `
-      <div style="width: 100%; font-size: 9pt; font-family: Arial, sans-serif; display: flex; justify-content: space-between; padding: 0 0.25in; box-sizing: border-box;">
-        <span style="color: #333;">COURSE | GRADE | LESSON 1</span>
-        <span style="color: #333;">PAGE 1 OF 3</span>
-      </div>
-    `;
-
-    const pdfBuffer = await page.pdf({
-      format: 'Letter',
-      printBackground: true,
-      margin: { top: '0.5in', right: '0.5in', bottom: '0.6in', left: '0.5in' },
-      displayHeaderFooter: true,
-      footerTemplate: footerHtml,
-      headerTemplate: '<div></div>',
-    });
-
-    await browser.close();
-
-    // Add page numbers using pdf-lib
-    const pdfDoc = await PDFDocument.load(pdfBuffer);
-    const pages = pdfDoc.getPages();
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-    for (let i = 0; i < pages.length; i++) {
-      const page = pages[i];
-      const { width } = page.getSize();
-      const pageNum = i + 1;
-
-      page.drawText(`COURSE | GRADE | LESSON 1`, {
-        x: 36,
-        y: 20,
-        size: 9,
-        font: font,
-        color: rgb(0.2, 0.2, 0.2),
-      });
-
-      page.drawText(`PAGE ${pageNum} OF ${pages.length}`, {
-        x: width - 120,
-        y: 20,
-        size: 9,
-        font: font,
-        color: rgb(0.2, 0.2, 0.2),
-      });
-    }
-
-    const finalPdf = await pdfDoc.save();
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline; filename=test-page-numbers.pdf');
-    res.send(finalPdf);
-  } catch (error) {
-    if (browser) await browser.close();
-    res.status(500).json({ error: error.message });
   }
 });
 
