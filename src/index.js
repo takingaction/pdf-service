@@ -46,7 +46,7 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
     await page.setContent(html, {
       waitUntil: ['domcontentloaded', 'networkidle0'],
-      timeout: 30000
+      timeout: 60000
     });
 
     await page.waitForTimeout(500);
