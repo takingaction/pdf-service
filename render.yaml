@@ -16,3 +16,5 @@ services:
         value: "18"
       - key: NPM_CONFIG_PRODUCTION
         value: "false"
+      - key: APP_URL
+        value: "https://bh-curriculum-management.vercel.app"

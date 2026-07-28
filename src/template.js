@@ -62,7 +62,7 @@ function buildTitlePage({ lesson, course, appUrl }) {
   const grade = course?.grade || 'N/A';
   const discipline = course?.discipline || 'N/A';
   const imageUrl = course?.pdf_image_url && course.pdf_image_url.trim() ? course.pdf_image_url : null;
-  const logoUrl = appUrl ? `${appUrl}/images/performers-ready.png` : '/images/performers-ready.png';
+  const logoUrl = appUrl ? `${appUrl}/images/performers-ready.png` : 'https://bh-curriculum-management.vercel.app/images/performers-ready.png';
 
   return `
     <div class="title-page">
