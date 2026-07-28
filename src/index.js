@@ -23,22 +23,15 @@ app.get('/health', (req, res) => {
 });
 
 /**
- * PDF generation endpoint
- * POST /pdf
- * Body: { html: string, filename?: string }
- * Returns: application/pdf
+ * Generate PDF from HTML
+ * @param {string} html - HTML content
+ * @param {string} filename - filename for the PDF
+ * @returns {Promise<{pdf: Buffer, filename: string}>}
  */
-app.post('/pdf', async (req, res) => {
-  const { html, filename = 'lesson.pdf' } = req.body;
-
-  if (!html) {
-    return res.status(400).json({ error: 'html field is required' });
-  }
-
+async function generatePDF(html, filename = 'document.pdf') {
   let browser = null;
 
   try {
-    // Launch headless Chromium
     browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
@@ -48,16 +41,13 @@ app.post('/pdf', async (req, res) => {
 
     const page = await browser.newPage();
 
-    // Set content and wait for any images to load
     await page.setContent(html, {
       waitUntil: ['domcontentloaded', 'networkidle0'],
       timeout: 30000
     });
 
-    // Wait a bit for any lazy-loaded content
     await page.waitForTimeout(500);
 
-    // Generate PDF
     const pdf = await page.pdf({
       format: 'Letter',
       printBackground: true,
@@ -70,17 +60,10 @@ app.post('/pdf', async (req, res) => {
     });
 
     await browser.close();
-    browser = null;
 
-    // Send PDF response
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.setHeader('Content-Length', pdf.length);
-    res.send(pdf);
+    return { pdf, filename };
 
   } catch (error) {
-    console.error('PDF generation error:', error);
-
     if (browser) {
       try {
         await browser.close();
@@ -88,7 +71,33 @@ app.post('/pdf', async (req, res) => {
         // Ignore cleanup errors
       }
     }
+    throw error;
+  }
+}
 
+/**
+ * PDF generation endpoint
+ * POST /pdf
+ * Body: { html: string, filename?: string }
+ * Returns: application/pdf
+ */
+app.post('/pdf', async (req, res) => {
+  const { html, filename = 'lesson.pdf' } = req.body;
+
+  if (!html) {
+    return res.status(400).json({ error: 'html field is required' });
+  }
+
+  try {
+    const { pdf, filename: safeFilename } = await generatePDF(html, filename);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+    res.setHeader('Content-Length', pdf.length);
+    res.send(pdf);
+
+  } catch (error) {
+    console.error('PDF generation error:', error);
     res.status(500).json({
       error: 'PDF generation failed',
       message: error.message
@@ -110,21 +119,22 @@ app.post('/lesson-pdf', async (req, res) => {
   }
 
   try {
-    // Build HTML from lesson data
     const html = buildLessonPDFHtml({ lesson, course });
 
-    // Use lesson title for filename if not provided
     const safeFilename = filename ||
       `${lesson.title || `Lesson-${lesson.lesson_number}`}.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
 
-    // Forward to /pdf endpoint
-    req.body = { html, filename: safeFilename };
-    return app._router.handle(req, res);
+    const { pdf } = await generatePDF(html, safeFilename);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+    res.setHeader('Content-Length', pdf.length);
+    res.send(pdf);
 
   } catch (error) {
-    console.error('Lesson PDF build error:', error);
+    console.error('Lesson PDF error:', error);
     res.status(500).json({
-      error: 'Failed to build lesson HTML',
+      error: 'Failed to generate lesson PDF',
       message: error.message
     });
   }
