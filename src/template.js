@@ -232,8 +232,8 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     /* Page 2 - Two Column */
     .page2-container {
-      page-break-after: always;
-      min-height: calc(100vh - 1in);
+      page-break-after: auto;
+      break-after: auto;
     }
 
     .two-column {
@@ -258,6 +258,8 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     /* Section Styling */
     .section {
       margin-bottom: 16px;
+      break-inside: avoid;
+      break-after: auto;
     }
 
     .section-header {
@@ -395,6 +397,8 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     .remaining-sections .section {
       margin-bottom: 20px;
+      break-inside: avoid;
+      break-after: auto;
     }
 
     /* Footer handling via Puppeteer */
