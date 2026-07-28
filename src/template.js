@@ -61,7 +61,7 @@ function buildTitlePage({ lesson, course }) {
   const courseTitle = escapeHtml(course?.title || 'Unknown Course');
   const grade = course?.grade || 'N/A';
   const discipline = course?.discipline || 'N/A';
-  const imageUrl = course?.pdf_image_url || null;
+  const imageUrl = course?.pdf_image_url && course.pdf_image_url.trim() ? course.pdf_image_url : null;
 
   return `
     <div class="title-page">

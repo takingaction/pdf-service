@@ -95,12 +95,12 @@ function buildFooterHtml(course, lesson) {
   const lessonNum = lesson?.lesson_number || '1';
 
   return `
-    <div style="width: 100%; font-size: 9pt; font-family: Arial, Helvetica, sans-serif; padding: 0 0.25in;">
-      <div style="float: left; color: #333;">
+    <div style="width: 100%; font-size: 9pt; font-family: Arial, Helvetica, sans-serif; padding: 0 0.25in; display: flex; justify-content: space-between;">
+      <div style="color: #333;">
         ${escapeHtml(courseTitle).toUpperCase()} | ${grade} | LESSON ${lessonNum}
       </div>
-      <div style="float: right; color: #333;">
-        PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span>
+      <div style="color: #333;">
+        PAGE <span class="pageNumber" style="color: #333;">1</span> OF <span class="totalPages" style="color: #333;">1</span>
       </div>
     </div>
   `;
