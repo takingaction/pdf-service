@@ -162,7 +162,8 @@ app.post('/lesson-pdf', async (req, res) => {
   }
 
   try {
-    const html = buildLessonPDFHtml({ lesson, course });
+    const appUrl = process.env.APP_URL || 'https://bh-curriculum-management.vercel.app';
+    const html = buildLessonPDFHtml({ lesson, course, appUrl });
 
     const safeFilename = filename ||
       `${lesson.title || `Lesson-${lesson.lesson_number}`}.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
@@ -203,7 +204,8 @@ app.post('/debug-html', (req, res) => {
   }
 
   try {
-    const html = buildLessonPDFHtml({ lesson, course });
+    const appUrl = process.env.APP_URL || 'https://bh-curriculum-management.vercel.app';
+    const html = buildLessonPDFHtml({ lesson, course, appUrl });
     res.setHeader('Content-Type', 'text/html');
     res.send(html);
   } catch (error) {

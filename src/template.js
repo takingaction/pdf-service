@@ -57,16 +57,19 @@ function buildSectionHtml(section, content) {
 /**
  * Build the title page HTML
  */
-function buildTitlePage({ lesson, course }) {
+function buildTitlePage({ lesson, course, appUrl }) {
   const courseTitle = escapeHtml(course?.title || 'Unknown Course');
   const grade = course?.grade || 'N/A';
   const discipline = course?.discipline || 'N/A';
   const imageUrl = course?.pdf_image_url && course.pdf_image_url.trim() ? course.pdf_image_url : null;
+  const logoUrl = appUrl ? `${appUrl}/images/performers-ready.png` : '/images/performers-ready.png';
 
   return `
     <div class="title-page">
+      <div class="logo-container">
+        <img src="${logoUrl}" alt="Performers Ready!" class="logo" />
+      </div>
       <div class="title-content">
-        <h1 class="performers-ready">PERFORMERS READY!</h1>
         <h2 class="course-info">${courseTitle} | ${grade}</h2>
       </div>
       ${imageUrl ? `<div class="hero-image-container"><img src="${escapeHtml(imageUrl)}" alt="${courseTitle}" class="hero-image" /></div>` : '<div class="hero-image-placeholder"></div>'}
@@ -129,8 +132,8 @@ function buildRemainingSectionsHtml({ lesson }) {
  * @param {Object} data - { lesson, course }
  * @returns {string} Complete HTML document
  */
-function buildLessonPDFHtml({ lesson, course }) {
-  const titlePage = buildTitlePage({ lesson, course });
+function buildLessonPDFHtml({ lesson, course, appUrl }) {
+  const titlePage = buildTitlePage({ lesson, course, appUrl });
   const page2Html = buildPage2Html({ lesson });
   const remainingHtml = buildRemainingSectionsHtml({ lesson });
 
@@ -176,10 +179,18 @@ function buildLessonPDFHtml({ lesson, course }) {
       padding: 0;
     }
 
+    .logo-container {
+      padding: 0.5in 0.75in 0.2in;
+      text-align: left;
+    }
+
+    .logo {
+      height: 72px;
+      width: auto;
+    }
+
     .title-content {
-      padding-top: 1.2in;
-      padding-left: 0.75in;
-      padding-right: 0.75in;
+      padding: 0.2in 0.75in;
       text-align: center;
     }
 
