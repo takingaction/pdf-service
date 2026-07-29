@@ -397,8 +397,8 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     }
 
     .lesson-content .cfu-text-cell p {
-      margin: 4px 0 0 0;
-      font-size: 8px;
+      margin: 2px 0 0 0;
+      font-size: 9px;
       color: #333;
     }
 
