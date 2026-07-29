@@ -1,10 +1,11 @@
 /**
  * PDF Generation Service
- * Uses Puppeteer to render HTML to PDF with full Chromium in Docker
+ * Uses Puppeteer to render HTML to PDF
  */
 
 const express = require('express');
 const puppeteer = require('puppeteer-core');
+const chromium = require('@sparticuz/chromium');
 const { buildLessonPDFHtml } = require('./template');
 
 const app = express();
@@ -27,23 +28,18 @@ app.get('/health', (req, res) => {
 async function generatePDF(html, filename = 'document.pdf', options = {}) {
   let browser = null;
 
-  const { course = null, lesson = null } = options;
-
   try {
-    // Use PUPPETEER_EXECUTABLE_PATH env var, default to /usr/bin/chromium
-    const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
-    console.log(`Attempting to launch browser at: ${executablePath}`);
-
     browser = await puppeteer.launch({
-      executablePath,
       args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
+        ...chromium.args,
         '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--disable-software-rasterizer',
+        '--disable-setuid-sandbox',
+        '--no-sandbox',
+        '--font-render-hinting=none',
       ],
-      headless: true,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
     });
 
     const page = await browser.newPage();
@@ -55,8 +51,7 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
     await page.waitForTimeout(1000);
 
-    // Use native header/footer with pageNumber/totalPages - works with full Chromium
-    let pdfOptions = {
+    const pdfOptions = {
       format: 'Letter',
       printBackground: true,
       margin: {
@@ -66,28 +61,6 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
         left: '0.5in'
       }
     };
-
-    if (course && lesson) {
-      const courseTitle = (course?.title || 'Unknown Course').toUpperCase();
-      const grade = course?.grade || 'N/A';
-      const lessonNum = lesson?.lesson_number || '1';
-
-      pdfOptions = {
-        ...pdfOptions,
-        displayHeaderFooter: true,
-        headerTemplate: '<span></span>',
-        footerTemplate: `
-          <div style="width: 100%; font-size: 9pt; font-family: Arial, sans-serif; padding: 0 0.25in; box-sizing: border-box; color: #333;">
-            <div style="display: inline-block; width: 49%; vertical-align: middle;">
-              ${courseTitle} | ${grade} | LESSON ${lessonNum}
-            </div>
-            <div style="display: inline-block; width: 49%; text-align: right; vertical-align: middle;">
-              PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span>
-            </div>
-          </div>
-        `,
-      };
-    }
 
     const pdf = await page.pdf(pdfOptions);
 
