@@ -180,7 +180,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     }
 
     .logo-container {
-      padding: 0.5in 0.75in 0.2in;
+      padding: 0.5in 0.5in 0.2in;
       text-align: left;
     }
 
@@ -190,7 +190,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     }
 
     .title-content {
-      padding: 0.2in 0.75in;
+      padding: 0.2in 0.5in;
       text-align: left;
       background-color: #e37c64;
       color: white;

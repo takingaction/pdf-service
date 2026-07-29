@@ -31,7 +31,7 @@ function buildFooterHtml(course, lesson) {
   const lessonNum = lesson?.lesson_number || '1';
 
   return `
-    <div style="width: 100%; font-size: 9pt; font-family: Arial, Helvetica, sans-serif; padding: 0 0.25in; display: flex; justify-content: space-between; color: #333;">
+    <div style="width: 100%; font-size: 9pt; font-family: Arial, Helvetica, sans-serif; padding: 0 0.5in; display: flex; justify-content: space-between; color: #333;">
       <div>
         ${escapeHtml(courseTitle).toUpperCase()} | ${grade} | LESSON ${lessonNum}
       </div>
