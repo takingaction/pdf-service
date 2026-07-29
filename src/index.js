@@ -35,9 +35,6 @@ function buildFooterHtml(course, lesson) {
       <div>
         ${escapeHtml(courseTitle).toUpperCase()} | ${grade} | LESSON ${lessonNum}
       </div>
-      <div>
-        PAGE
-      </div>
     </div>
   `;
 }
