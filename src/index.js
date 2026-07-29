@@ -36,10 +36,16 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
   try {
     browser = await puppeteer.launch({
-      args: chromium.args,
+      args: [
+        ...chromium.args,
+        '--disable-dev-shm-usage',
+        '--disable-setuid-sandbox',
+        '--no-sandbox',
+        '--font-render-hinting=none',
+      ],
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      headless: 'new',
     });
 
     const page = await browser.newPage();
@@ -49,7 +55,7 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
       timeout: 60000
     });
 
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(1000);
 
     const pdfOptions = {
       format: 'Letter',
@@ -65,7 +71,7 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
     if (displayHeaderFooter && footerHtml) {
       pdfOptions.displayHeaderFooter = true;
       pdfOptions.footerTemplate = footerHtml;
-      pdfOptions.headerTemplate = '<div></div>'; // Empty header
+      pdfOptions.headerTemplate = '<div style="font-size: 1px;">&nbsp;</div>';
     }
 
     const pdf = await page.pdf(pdfOptions);
@@ -89,6 +95,7 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 /**
  * Build footer HTML for Puppeteer
  * NOTE: pageNumber and totalPages are Puppeteer template variables
+ * IMPORTANT: All styles must be inline - header/footer templates are isolated
  */
 function buildFooterHtml(course, lesson) {
   const courseTitle = course?.title || 'Unknown Course';
@@ -96,12 +103,15 @@ function buildFooterHtml(course, lesson) {
   const lessonNum = lesson?.lesson_number || '1';
 
   return `
-    <div style="width: 100%; font-size: 9pt; font-family: Arial, Helvetica, sans-serif; padding: 0 0.25in; color: #333;">
-      <div style="display: inline-block;">
+    <style>
+      * { font-family: Arial, sans-serif; font-size: 9pt; margin: 0; padding: 0; }
+    </style>
+    <div style="width: 100%; padding: 0 0.25in; box-sizing: border-box; color: #333;">
+      <div style="display: inline-block; width: 49%; vertical-align: middle;">
         ${escapeHtml(courseTitle).toUpperCase()} | ${grade} | LESSON ${lessonNum}
       </div>
-      <div style="display: inline-block; float: right;">
-        PAGE <span class="pageNumber" style="font-size: 9pt;"></span> OF <span class="totalPages" style="font-size: 9pt;"></span>
+      <div style="display: inline-block; width: 49%; text-align: right; vertical-align: middle;">
+        PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span>
       </div>
     </div>
   `;
