@@ -6,12 +6,10 @@
 const express = require('express');
 const puppeteer = require('puppeteer-core');
 const chromium = require('@sparticuz/chromium');
-const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 const { buildLessonPDFHtml } = require('./template');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 // Increase payload limit for HTML content
 app.use(express.json({ limit: '10mb' }));
@@ -25,56 +23,10 @@ app.get('/health', (req, res) => {
 });
 
 /**
- * Add page numbers to PDF using pdf-lib
- * Uses incremental save to avoid file bloat
- */
-async function addPageNumbers(pdfBytes, course, lesson) {
-  const pdfDoc = await PDFDocument.load(pdfBytes, { updateMetadata: false });
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const pages = pdfDoc.getPages();
-  const total = pages.length;
-
-  const courseTitle = (course?.title || 'Unknown Course').toUpperCase();
-  const grade = course?.grade || 'N/A';
-  const lessonNum = lesson?.lesson_number || '1';
-  const leftText = `${courseTitle} | ${grade} | LESSON ${lessonNum}`;
-
-  const fontSize = 9;
-  const y = 22;
-
-  for (let i = 0; i < pages.length; i++) {
-    const page = pages[i];
-    const { width } = page.getSize();
-
-    page.drawText(leftText, {
-      x: 36,
-      y,
-      size: fontSize,
-      font,
-      color: rgb(0.2, 0.2, 0.2),
-    });
-
-    const pageNumText = `PAGE ${i + 1} OF ${total}`;
-    const textWidth = font.widthOfTextAtSize(pageNumText, fontSize);
-    page.drawText(pageNumText, {
-      x: width - 36 - textWidth,
-      y,
-      size: fontSize,
-      font,
-      color: rgb(0.2, 0.2, 0.2),
-    });
-  }
-
-  return await pdfDoc.save({ incremental: true });
-}
-
-/**
  * Generate PDF from HTML
  */
 async function generatePDF(html, filename = 'document.pdf', options = {}) {
   let browser = null;
-
-  const { course = null, lesson = null } = options;
 
   try {
     browser = await puppeteer.launch({
@@ -114,36 +66,9 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
     await browser.close();
 
-    // Check base PDF size first - if already near limit, skip pdf-lib entirely
-    const SIZE_BUFFER = 500 * 1024; // 500KB buffer for safety
-    const basePdfSize = pdf.length;
+    console.log(`PDF output size: ${pdf.length} bytes (${(pdf.length / 1024 / 1024).toFixed(2)} MB)`);
 
-    // Add page numbers using pdf-lib
-    let finalPdf = pdf;
-    let usedPdfLib = false;
-
-    if (course && lesson && basePdfSize < (MAX_FILE_SIZE - SIZE_BUFFER)) {
-      try {
-        finalPdf = await addPageNumbers(pdf, course, lesson);
-        usedPdfLib = true;
-
-        // If too large with pdf-lib, fall back to no page numbers
-        if (finalPdf.length > MAX_FILE_SIZE) {
-          console.log(`PDF too large with page numbers (${finalPdf.length} bytes), falling back`);
-          finalPdf = pdf;
-          usedPdfLib = false;
-        }
-      } catch (err) {
-        console.error('pdf-lib error, using PDF without page numbers:', err.message);
-        finalPdf = pdf;
-      }
-    } else if (basePdfSize >= (MAX_FILE_SIZE - SIZE_BUFFER)) {
-      console.log(`Base PDF too large (${basePdfSize} bytes), skipping page numbers`);
-    }
-
-    console.log(`Generated PDF: ${finalPdf.length} bytes, usedPdfLib: ${usedPdfLib}`);
-
-    return { pdf: finalPdf, filename };
+    return { pdf, filename };
 
   } catch (error) {
     if (browser) {
@@ -185,13 +110,10 @@ app.post('/pdf', async (req, res) => {
   try {
     const { pdf, filename: safeFilename } = await generatePDF(html, filename);
 
-    // Convert Uint8Array to Buffer for reliable binary transfer
-    const pdfBuffer = Buffer.from(pdf);
-
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
-    res.setHeader('Content-Length', pdfBuffer.length);
-    res.send(pdfBuffer);
+    res.setHeader('Content-Length', pdf.length);
+    res.send(pdf);
 
   } catch (error) {
     console.error('PDF generation error:', error);
@@ -224,17 +146,12 @@ app.post('/lesson-pdf', async (req, res) => {
     const safeFilename = filename ||
       `${lesson.title || `Lesson-${lesson.lesson_number}`}.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
 
-    const { pdf } = await generatePDF(html, safeFilename, { course, lesson });
-
-    console.log(`PDF output size: ${pdf.length} bytes (${(pdf.length / 1024 / 1024).toFixed(2)} MB)`);
-
-    // Convert Uint8Array to Buffer for reliable binary transfer
-    const pdfBuffer = Buffer.from(pdf);
+    const { pdf } = await generatePDF(html, safeFilename);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
-    res.setHeader('Content-Length', pdfBuffer.length);
-    res.send(pdfBuffer);
+    res.setHeader('Content-Length', pdf.length);
+    res.send(pdf);
 
   } catch (error) {
     console.error('Lesson PDF error:', error);
