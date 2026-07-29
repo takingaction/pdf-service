@@ -6,6 +6,7 @@
 const express = require('express');
 const puppeteer = require('puppeteer-core');
 const chromium = require('@sparticuz/chromium');
+const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 const { buildLessonPDFHtml } = require('./template');
 
 const app = express();
@@ -23,10 +24,57 @@ app.get('/health', (req, res) => {
 });
 
 /**
+ * Add page numbers to PDF using pdf-lib
+ * Uses incremental save to avoid file bloat - only appends new objects
+ */
+async function addPageNumbers(pdfBytes, course, lesson) {
+  const pdfDoc = await PDFDocument.load(pdfBytes, { updateMetadata: false });
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const pages = pdfDoc.getPages();
+  const total = pages.length;
+
+  const courseTitle = (course?.title || 'Unknown Course').toUpperCase();
+  const grade = course?.grade || 'N/A';
+  const lessonNum = lesson?.lesson_number || '1';
+  const leftText = `${courseTitle} | ${grade} | LESSON ${lessonNum}`;
+
+  const fontSize = 9;
+  const y = 22;
+
+  for (let i = 0; i < pages.length; i++) {
+    const page = pages[i];
+    const { width } = page.getSize();
+
+    page.drawText(leftText, {
+      x: 36,
+      y,
+      size: fontSize,
+      font,
+      color: rgb(0.2, 0.2, 0.2),
+    });
+
+    const pageNumText = `PAGE ${i + 1} OF ${total}`;
+    const textWidth = font.widthOfTextAtSize(pageNumText, fontSize);
+    page.drawText(pageNumText, {
+      x: width - 36 - textWidth,
+      y,
+      size: fontSize,
+      font,
+      color: rgb(0.2, 0.2, 0.2),
+    });
+  }
+
+  // incremental: true only appends new objects - minimal size increase
+  return await pdfDoc.save({ incremental: true });
+}
+
+/**
  * Generate PDF from HTML
  */
 async function generatePDF(html, filename = 'document.pdf', options = {}) {
   let browser = null;
+
+  const { course = null, lesson = null } = options;
 
   try {
     browser = await puppeteer.launch({
@@ -66,7 +114,13 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
     await browser.close();
 
-    return { pdf, filename };
+    // Add page numbers using pdf-lib (incremental save keeps size minimal)
+    let finalPdf = pdf;
+    if (course && lesson) {
+      finalPdf = await addPageNumbers(pdf, course, lesson);
+    }
+
+    return { pdf: finalPdf, filename };
 
   } catch (error) {
     if (browser) {
@@ -142,7 +196,7 @@ app.post('/lesson-pdf', async (req, res) => {
     const safeFilename = filename ||
       `${lesson.title || `Lesson-${lesson.lesson_number}`}.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
 
-    const { pdf } = await generatePDF(html, safeFilename);
+    const { pdf } = await generatePDF(html, safeFilename, { course, lesson });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
