@@ -23,10 +23,32 @@ app.get('/health', (req, res) => {
 });
 
 /**
+ * Build footer HTML for Puppeteer
+ */
+function buildFooterHtml(course, lesson) {
+  const courseTitle = course?.title || 'Unknown Course';
+  const grade = course?.grade || 'N/A';
+  const lessonNum = lesson?.lesson_number || '1';
+
+  return `
+    <div style="width: 100%; font-size: 9pt; font-family: Arial, Helvetica, sans-serif; padding: 0 0.25in; display: flex; justify-content: space-between; color: #333;">
+      <div>
+        ${escapeHtml(courseTitle).toUpperCase()} | ${grade} | LESSON ${lessonNum}
+      </div>
+      <div>
+        PAGE
+      </div>
+    </div>
+  `;
+}
+
+/**
  * Generate PDF from HTML
  */
 async function generatePDF(html, filename = 'document.pdf', options = {}) {
   let browser = null;
+
+  const { footerHtml = null, displayHeaderFooter = false } = options;
 
   try {
     browser = await puppeteer.launch({
@@ -57,10 +79,16 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
       margin: {
         top: '0.5in',
         right: '0.5in',
-        bottom: '0.8in',
+        bottom: '0.6in',
         left: '0.5in'
       }
     };
+
+    if (displayHeaderFooter && footerHtml) {
+      pdfOptions.displayHeaderFooter = true;
+      pdfOptions.footerTemplate = footerHtml;
+      pdfOptions.headerTemplate = '<div></div>';
+    }
 
     const pdf = await page.pdf(pdfOptions);
 
@@ -139,14 +167,19 @@ app.post('/lesson-pdf', async (req, res) => {
 
   try {
     const appUrl = process.env.APP_URL || 'https://bh-curriculum-management.vercel.app';
-    let html = buildLessonPDFHtml({ lesson, course, appUrl });
+    const html = buildLessonPDFHtml({ lesson, course, appUrl });
 
     console.log(`HTML input size: ${html.length} bytes (${(html.length / 1024 / 1024).toFixed(2)} MB)`);
 
     const safeFilename = filename ||
       `${lesson.title || `Lesson-${lesson.lesson_number}`}.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
 
-    const { pdf } = await generatePDF(html, safeFilename, { course, lesson });
+    const footerHtml = buildFooterHtml(course, lesson);
+
+    const { pdf } = await generatePDF(html, safeFilename, {
+      footerHtml,
+      displayHeaderFooter: true
+    });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
