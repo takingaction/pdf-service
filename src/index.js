@@ -23,7 +23,7 @@ app.get('/health', (req, res) => {
 });
 
 /**
- * Inject page numbers - properly in footer area
+ * Inject page numbers using CSS counters
  */
 function injectPageNumbers(html, course, lesson) {
   const courseTitle = (course?.title || 'Unknown Course').toUpperCase();
@@ -37,6 +37,9 @@ function injectPageNumbers(html, course, lesson) {
         margin: 0.5in;
         margin-bottom: 0.8in;
         size: letter;
+      }
+      html {
+        counter-reset: page;
       }
       body {
         margin: 0;
@@ -53,10 +56,17 @@ function injectPageNumbers(html, course, lesson) {
         display: flex;
         justify-content: space-between;
       }
+      .pdf-footer-left::before {
+        counter-increment: page;
+        content: "${leftText}";
+      }
+      .pdf-footer-right::before {
+        content: "PAGE " counter(page);
+      }
     </style>
   `;
 
-  const footerHtml = `<div class="pdf-footer"><span>${leftText}</span><span>PAGE <span class="page-num">1</span></span></div>`;
+  const footerHtml = `<div class="pdf-footer"><span class="pdf-footer-left"></span><span class="pdf-footer-right"></span></div>`;
 
   html = html.replace('</head>', `${footerCss}</head>`);
   html = html.replace('</body>', `${footerHtml}</body>`);
