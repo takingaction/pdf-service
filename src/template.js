@@ -44,11 +44,11 @@ function escapeHtml(text) {
   return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
-function buildSectionHtml(section, content) {
+function buildSectionHtml(section, content, headerClass = '') {
   if (!content || !content.trim()) return '';
   return `
-    <div class="section">
-      <div class="section-header">${escapeHtml(section.label)}</div>
+    <div class="section ${headerClass ? headerClass + '-section' : ''}">
+      <div class="section-header ${headerClass ? 'section-header-' + headerClass : ''}">${escapeHtml(section.label)}</div>
       <div class="lesson-content">${content}</div>
     </div>
   `;
@@ -92,7 +92,7 @@ function buildPage2Html({ lesson }) {
   const rightContent = PAGE_2_RIGHT_SECTIONS
     .map(key => {
       const section = SECTIONS.find(s => s.key === key);
-      return buildSectionHtml(section, lesson[key]);
+      return buildSectionHtml(section, lesson[key], 'teal');
     })
     .filter(Boolean)
     .join('');
@@ -116,7 +116,13 @@ function buildPage2Html({ lesson }) {
  */
 function buildRemainingSectionsHtml({ lesson }) {
   const sectionsHtml = REMAINING_SECTIONS
-    .map(section => buildSectionHtml(section, lesson[section.key]))
+    .map(section => {
+      let headerClass = '';
+      if (section.key === 'vapa_text_block' || section.key === 'ncas_text_block') {
+        headerClass = 'gray';
+      }
+      return buildSectionHtml(section, lesson[section.key], headerClass);
+    })
     .filter(Boolean)
     .join('');
 
@@ -285,6 +291,37 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       padding: 8px 12px;
       margin-bottom: 8px;
       clear: both;
+    }
+
+    .section-header-teal {
+      background-color: #63F6D2;
+      color: #333;
+    }
+
+    .section-header-gray {
+      background-color: #D1D3DB;
+      color: #333;
+    }
+
+    /* Lesson Outline - no link styling */
+    .left-column .lesson-content a {
+      color: #333 !important;
+      text-decoration: none !important;
+      font-weight: bold;
+    }
+
+    /* Assessment table styling */
+    .assessment-section table {
+      border: 2px solid #e37c64;
+    }
+
+    .assessment-section table th {
+      background-color: #e37c64;
+      color: white;
+    }
+
+    .assessment-section table td {
+      border: 1px solid #e37c64;
     }
 
     .lesson-content {
