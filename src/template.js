@@ -392,14 +392,14 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     /* CFU cell styling */
     .lesson-content .cfu-text-cell h4 {
       margin: 0 !important;
-      font-size: 10px !important;
+      font-size: 11px !important;
       font-weight: 700 !important;
       color: #333 !important;
     }
 
     .lesson-content .cfu-text-cell p {
       margin: 2px 0 0 0;
-      font-size: 10px;
+      font-size: 11px;
       color: #333;
     }
 
