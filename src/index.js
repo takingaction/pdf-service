@@ -30,38 +30,21 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
   const { course = null, lesson = null } = options;
 
   try {
-    // Try multiple possible chromium paths
-    const possiblePaths = [
-      process.env.PUPPETEER_EXECUTABLE_PATH,
-      '/usr/bin/chromium',
-      '/usr/bin/chromium-browser',
-      '/usr/bin/google-chrome',
-      '/usr/bin/google-chrome-stable',
-    ].filter(Boolean);
+    // Use PUPPETEER_EXECUTABLE_PATH env var, default to /usr/bin/chromium
+    const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
+    console.log(`Attempting to launch browser at: ${executablePath}`);
 
-    let browser;
-    for (const executablePath of possiblePaths) {
-      try {
-        browser = await puppeteer.launch({
-          executablePath,
-          args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-gpu',
-          ],
-          headless: true,
-        });
-        console.log(`Browser launched with: ${executablePath}`);
-        break;
-      } catch (e) {
-        console.log(`Failed to launch with ${executablePath}: ${e.message}`);
-      }
-    }
-
-    if (!browser) {
-      throw new Error('Could not find a working Chrome/Chromium executable');
-    }
+    browser = await puppeteer.launch({
+      executablePath,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--disable-software-rasterizer',
+      ],
+      headless: true,
+    });
 
     const page = await browser.newPage();
 
