@@ -6,7 +6,6 @@
 const express = require('express');
 const puppeteer = require('puppeteer-core');
 const chromium = require('@sparticuz/chromium');
-const HummusRecipe = require('hummus-recipe');
 const { buildLessonPDFHtml } = require('./template');
 
 const app = express();
@@ -24,61 +23,10 @@ app.get('/health', (req, res) => {
 });
 
 /**
- * Add page numbers to PDF using hummus-recipe
- * hummus-recipe appends to PDF stream without decompressing/re-encoding
- */
-async function addPageNumbers(pdfBytes, course, lesson) {
-  const courseTitle = (course?.title || 'Unknown Course').toUpperCase();
-  const grade = course?.grade || 'N/A';
-  const lessonNum = lesson?.lesson_number || '1';
-  const leftText = `${courseTitle} | ${grade} | LESSON ${lessonNum}`;
-
-  const inputBuffer = Buffer.from(pdfBytes);
-  const outputBuffer = [];
-
-  return new Promise((resolve, reject) => {
-    try {
-      const recipe = new HummusRecipe(inputBuffer);
-
-      const totalPages = recipe.totalPages;
-
-      for (let i = 1; i <= totalPages; i++) {
-        recipe.editPage(i)
-          .text(leftText, 36, 22, {
-            color: '#333333',
-            size: 9,
-            font: 'Helvetica',
-          })
-          .text(`PAGE ${i} OF ${totalPages}`, null, 22, {
-            color: '#333333',
-            size: 9,
-            font: 'Helvetica',
-            align: 'right',
-            marginRight: 36,
-          })
-          .endPage();
-      }
-
-      recipe.endPDF((err, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(Buffer.from(result));
-        }
-      });
-    } catch (err) {
-      reject(err);
-    }
-  });
-}
-
-/**
  * Generate PDF from HTML
  */
 async function generatePDF(html, filename = 'document.pdf', options = {}) {
   let browser = null;
-
-  const { course = null, lesson = null } = options;
 
   try {
     browser = await puppeteer.launch({
@@ -118,23 +66,9 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
     await browser.close();
 
-    // Add page numbers using hummus-recipe
-    let finalPdf = pdf;
-    let usedHummus = false;
+    console.log(`PDF output size: ${pdf.length} bytes (${(pdf.length / 1024 / 1024).toFixed(2)} MB)`);
 
-    if (course && lesson) {
-      try {
-        finalPdf = await addPageNumbers(pdf, course, lesson);
-        usedHummus = true;
-      } catch (err) {
-        console.error('hummus-recipe error, using PDF without page numbers:', err.message);
-        finalPdf = pdf;
-      }
-    }
-
-    console.log(`PDF output size: ${finalPdf.length} bytes (${(finalPdf.length / 1024 / 1024).toFixed(2)} MB), usedHummus: ${usedHummus}`);
-
-    return { pdf: finalPdf, filename };
+    return { pdf, filename };
 
   } catch (error) {
     if (browser) {
@@ -212,7 +146,7 @@ app.post('/lesson-pdf', async (req, res) => {
     const safeFilename = filename ||
       `${lesson.title || `Lesson-${lesson.lesson_number}`}.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
 
-    const { pdf } = await generatePDF(html, safeFilename, { course, lesson });
+    const { pdf } = await generatePDF(html, safeFilename);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
