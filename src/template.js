@@ -390,10 +390,10 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     /* CFU cell styling */
     .lesson-content .cfu-text-cell h4 {
-      margin: 0;
-      font-size: 9px;
-      font-weight: 700;
-      color: #333;
+      margin: 0 !important;
+      font-size: 9px !important;
+      font-weight: 700 !important;
+      color: #333 !important;
     }
 
     .lesson-content .cfu-text-cell p {
