@@ -11,6 +11,7 @@ const { buildLessonPDFHtml } = require('./template');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 // Increase payload limit for HTML content
 app.use(express.json({ limit: '10mb' }));
@@ -25,7 +26,7 @@ app.get('/health', (req, res) => {
 
 /**
  * Add page numbers to PDF using pdf-lib
- * Uses incremental save to avoid file bloat - only appends new objects
+ * Uses incremental save to avoid file bloat
  */
 async function addPageNumbers(pdfBytes, course, lesson) {
   const pdfDoc = await PDFDocument.load(pdfBytes, { updateMetadata: false });
@@ -64,7 +65,6 @@ async function addPageNumbers(pdfBytes, course, lesson) {
     });
   }
 
-  // incremental: true only appends new objects - minimal size increase
   return await pdfDoc.save({ incremental: true });
 }
 
@@ -114,11 +114,28 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
     await browser.close();
 
-    // Add page numbers using pdf-lib (incremental save keeps size minimal)
+    // Add page numbers using pdf-lib
     let finalPdf = pdf;
+    let usedPdfLib = false;
+
     if (course && lesson) {
-      finalPdf = await addPageNumbers(pdf, course, lesson);
+      try {
+        finalPdf = await addPageNumbers(pdf, course, lesson);
+        usedPdfLib = true;
+
+        // If still too large with pdf-lib, fall back to no page numbers
+        if (finalPdf.length > MAX_FILE_SIZE) {
+          console.log(`PDF too large with page numbers (${finalPdf.length} bytes), falling back`);
+          finalPdf = pdf;
+          usedPdfLib = false;
+        }
+      } catch (err) {
+        console.error('pdf-lib error, using PDF without page numbers:', err.message);
+        finalPdf = pdf;
+      }
     }
+
+    console.log(`Generated PDF: ${finalPdf.length} bytes, usedPdfLib: ${usedPdfLib}`);
 
     return { pdf: finalPdf, filename };
 
