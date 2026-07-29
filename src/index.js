@@ -1,11 +1,10 @@
 /**
  * PDF Generation Service
- * Uses Puppeteer to render HTML to PDF
+ * Uses Puppeteer to render HTML to PDF with full Chromium in Docker
  */
 
 const express = require('express');
 const puppeteer = require('puppeteer-core');
-const chromium = require('@sparticuz/chromium');
 const { buildLessonPDFHtml } = require('./template');
 
 const app = express();
@@ -79,17 +78,18 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
   const { course = null, lesson = null } = options;
 
   try {
+    const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || await chromium.executablePath();
+
     browser = await puppeteer.launch({
+      executablePath,
       args: [
-        ...chromium.args,
-        '--disable-dev-shm-usage',
-        '--disable-setuid-sandbox',
         '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
         '--font-render-hinting=none',
       ],
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: 'new',
+      headless: true,
     });
 
     const page = await browser.newPage();

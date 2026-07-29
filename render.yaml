@@ -1,4 +1,4 @@
-# Render Blueprint - pdf-service
+# Render Blueprint - pdf-service with Docker
 # See https://render.com/docs/blueprint-spec
 
 services:
@@ -8,13 +8,10 @@ services:
     plan: starter
     branch: main
     rootDir: .
-    buildCommand: npm install
-    startCommand: node src/index.js
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /health
     envVars:
       - key: NODE_VERSION
         value: "18"
-      - key: NPM_CONFIG_PRODUCTION
-        value: "false"
       - key: APP_URL
         value: "https://bh-curriculum-management.vercel.app"
