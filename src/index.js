@@ -188,10 +188,10 @@ app.post('/lesson-pdf', async (req, res) => {
 
     console.log(`HTML input size: ${html.length} bytes (${(html.length / 1024 / 1024).toFixed(2)} MB)`);
 
-    // Inject page numbers via CSS counters
-    if (course && lesson) {
-      html = injectPageNumberCss(html, course, lesson);
-    }
+    // CSS counter injection disabled - testing native footer template instead
+    // if (course && lesson) {
+    //   html = injectPageNumberCss(html, course, lesson);
+    // }
 
     const safeFilename = filename ||
       `${lesson.title || `Lesson-${lesson.lesson_number}`}.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
