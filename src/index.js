@@ -23,48 +23,38 @@ app.get('/health', (req, res) => {
 });
 
 /**
- * Inject page numbers using CSS counters - works on all Chromium builds
+ * Inject page numbers using CSS counters
  */
-function injectPageNumberCss(html, course, lesson) {
+function injectPageNumbers(html, course, lesson) {
   const courseTitle = (course?.title || 'Unknown Course').toUpperCase();
   const grade = course?.grade || 'N/A';
   const lessonNum = lesson?.lesson_number || '1';
   const leftText = `${courseTitle} | ${grade} | LESSON ${lessonNum}`;
 
-  const css = `
+  const footer = `
     <style>
-      @page {
-        margin: 0.5in 0.5in 0.8in 0.5in;
-      }
-      html {
-        counter-reset: page;
-      }
-      .page-footer {
+      .pdf-footer {
         position: fixed;
         bottom: 0.25in;
         left: 0.5in;
         right: 0.5in;
         font-family: Arial, sans-serif;
         font-size: 9pt;
-        color: #333;
+        color: #333333;
         display: flex;
         justify-content: space-between;
       }
-      .page-footer-left::before {
-        counter-increment: page;
-        content: "${leftText}";
-      }
-      .page-footer-right::after {
-        content: "PAGE " counter(page) " OF " counter(pages);
+      .pdf-footer-right::after {
+        content: counter(page);
       }
     </style>
-    <div class="page-footer">
-      <span class="page-footer-left"></span>
-      <span class="page-footer-right"></span>
+    <div class="pdf-footer">
+      <span>${leftText}</span>
+      <span class="pdf-footer-right">PAGE </span>
     </div>
   `;
 
-  return html.replace('</body>', `${css}</body>`);
+  return html.replace('</body>', `${footer}</body>`);
 }
 
 /**
@@ -77,13 +67,24 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
   try {
     browser = await puppeteer.launch({
-      args: chromium.args,
+      args: [
+        ...chromium.args,
+        '--disable-dev-shm-usage',
+        '--disable-setuid-sandbox',
+        '--no-sandbox',
+        '--font-render-hinting=none',
+      ],
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      headless: 'new',
     });
 
     const page = await browser.newPage();
+
+    // Inject page numbers via CSS before rendering
+    if (course && lesson) {
+      html = injectPageNumbers(html, course, lesson);
+    }
 
     await page.setContent(html, {
       waitUntil: ['domcontentloaded', 'networkidle0'],
@@ -100,11 +101,7 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
         right: '0.5in',
         bottom: '0.8in',
         left: '0.5in'
-      },
-      // TEST: barebones footer to check if pageNumber/totalPages injection works
-      displayHeaderFooter: true,
-      headerTemplate: '<span></span>',
-      footerTemplate: '<div style="font-size:12pt;color:red;font-family:Arial;">PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span></div>',
+      }
     };
 
     const pdf = await page.pdf(pdfOptions);
@@ -188,15 +185,10 @@ app.post('/lesson-pdf', async (req, res) => {
 
     console.log(`HTML input size: ${html.length} bytes (${(html.length / 1024 / 1024).toFixed(2)} MB)`);
 
-    // CSS counter injection disabled - testing native footer template instead
-    // if (course && lesson) {
-    //   html = injectPageNumberCss(html, course, lesson);
-    // }
-
     const safeFilename = filename ||
       `${lesson.title || `Lesson-${lesson.lesson_number}`}.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
 
-    const { pdf } = await generatePDF(html, safeFilename);
+    const { pdf } = await generatePDF(html, safeFilename, { course, lesson });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
