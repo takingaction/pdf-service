@@ -185,7 +185,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     }
 
     .logo {
-      height: 72px;
+      height: 144px;
       width: auto;
     }
 
@@ -316,20 +316,107 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       margin-bottom: 3px;
     }
 
-    /* CFU Block styling - must come before general table styles */
+    /* CFU Block styling */
     .lesson-content [data-check-for-understanding="true"] {
-      padding: 10px 14px;
+      padding: 40px 60px;
       margin: 10px 0;
+      border-radius: 8px;
     }
 
-    .lesson-content [data-check-for-understanding="true"] table,
+    .lesson-content [data-check-for-understanding="true"] table {
+      width: 100%;
+      border-collapse: collapse;
+      border: none;
+    }
+
     .lesson-content [data-check-for-understanding="true"] table td,
     .lesson-content [data-check-for-understanding="true"] table th,
-    .lesson-content [data-check-for-understanding="true"] table tr {
+    .lesson-content [data-check-for-understanding="true"] table tr,
+    .lesson-content [data-check-for-understanding="true"] .cfu-image-cell,
+    .lesson-content [data-check-for-understanding="true"] .cfu-text-cell {
       border: none !important;
       border-collapse: collapse;
     }
 
+    /* CFU alignment classes - float-based positioning */
+    .lesson-content .cfu-wrap-top-left {
+      float: left;
+      margin: 0 16px 16px 0;
+    }
+
+    .lesson-content .cfu-wrap-top-right {
+      float: right;
+      margin: 0 0 16px 16px;
+    }
+
+    .lesson-content .cfu-wrap-top-center {
+      margin: 0 auto 16px auto;
+    }
+
+    .lesson-content .cfu-left {
+      float: left;
+      margin-right: 16px;
+    }
+
+    .lesson-content .cfu-right {
+      float: right;
+      margin-left: 16px;
+    }
+
+    .lesson-content .cfu-center {
+      margin: 0 auto;
+    }
+
+    .lesson-content .cfu-wrap-bottom-left {
+      float: left;
+      margin: 16px 16px 0 0;
+    }
+
+    .lesson-content .cfu-wrap-bottom-right {
+      float: right;
+      margin: 16px 0 0 16px;
+    }
+
+    .lesson-content .cfu-wrap-bottom-center {
+      margin: 16px auto 0 auto;
+    }
+
+    /* Clear floats after non-wrapped CFU */
+    .lesson-content [data-check-for-understanding]:not([class*="wrap"])::after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+
+    /* CFU cell styling */
+    .lesson-content .cfu-text-cell h4 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .lesson-content .cfu-text-cell p {
+      margin: 4px 0 0 0;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .lesson-content .cfu-image-cell {
+      width: 25%;
+      vertical-align: middle;
+      text-align: right;
+      padding: 8px;
+    }
+
+    .lesson-content .cfu-text-cell {
+      width: 75%;
+      vertical-align: middle;
+      text-align: left;
+      padding: 8px;
+    }
+
+    /* General table styles - come after CFU to not override CFU borders */
     .lesson-content table {
       width: 100%;
       border-collapse: collapse;
