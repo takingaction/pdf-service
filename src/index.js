@@ -57,7 +57,7 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
       margin: {
         top: '0.5in',
         right: '0.5in',
-        bottom: '0.6in',
+        bottom: '0.8in',
         left: '0.5in'
       }
     };
@@ -96,12 +96,12 @@ function buildFooterHtml(course, lesson) {
   const lessonNum = lesson?.lesson_number || '1';
 
   return `
-    <div style="width: 100%; font-size: 9pt; font-family: Arial, Helvetica, sans-serif; padding: 0 0.25in; display: flex; justify-content: space-between; color: #333;">
-      <div>
+    <div style="width: 100%; font-size: 9pt; font-family: Arial, Helvetica, sans-serif; padding: 0 0.25in; color: #333;">
+      <div style="display: inline-block;">
         ${escapeHtml(courseTitle).toUpperCase()} | ${grade} | LESSON ${lessonNum}
       </div>
-      <div>
-        PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span>
+      <div style="display: inline-block; float: right;">
+        PAGE <span class="pageNumber" style="font-size: 9pt;"></span> OF <span class="totalPages" style="font-size: 9pt;"></span>
       </div>
     </div>
   `;
