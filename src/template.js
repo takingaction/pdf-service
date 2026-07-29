@@ -343,6 +343,14 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       clear: both;
     }
 
+    /* Use display:flow-root to create block formatting context for wrapped CFUs */
+    .lesson-content .cfu-wrap-top-left,
+    .lesson-content .cfu-wrap-top-right,
+    .lesson-content .cfu-wrap-bottom-left,
+    .lesson-content .cfu-wrap-bottom-right {
+      display: flow-root;
+    }
+
     .lesson-content [data-check-for-understanding="true"] table {
       width: 100%;
       border-collapse: collapse;
