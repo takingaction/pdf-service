@@ -397,16 +397,18 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     }
 
     /* CFU Block styling */
-    .lesson-content [data-cfu-id] {
+    .lesson-content [data-check-for-understanding] {
       padding: 10px 14px;
       margin: 10px 0;
     }
 
     /* CFU internal table - no borders */
-    .lesson-content [data-cfu-id] table,
-    .lesson-content [data-cfu-id] table td,
-    .lesson-content [data-cfu-id] table th {
-      border: none;
+    .lesson-content [data-check-for-understanding] table,
+    .lesson-content [data-check-for-understanding] table td,
+    .lesson-content [data-check-for-understanding] table th,
+    .lesson-content [data-check-for-understanding] table tr {
+      border: none !important;
+      border-collapse: collapse;
     }
 
     /* Table with grid disabled */
