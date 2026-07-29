@@ -95,13 +95,14 @@ function buildFooterHtml(course, lesson) {
   const grade = course?.grade || 'N/A';
   const lessonNum = lesson?.lesson_number || '1';
 
+  // For now, return simple footer without page numbers (Puppeteer template variables don't work on Render)
   return `
     <div style="width: 100%; font-size: 9pt; font-family: Arial, Helvetica, sans-serif; padding: 0 0.25in; display: flex; justify-content: space-between; color: #333;">
       <div>
         ${escapeHtml(courseTitle).toUpperCase()} | ${grade} | LESSON ${lessonNum}
       </div>
       <div>
-        PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span>
+        PAGE
       </div>
     </div>
   `;
