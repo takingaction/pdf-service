@@ -101,7 +101,7 @@ function buildFooterHtml(course, lesson) {
         ${escapeHtml(courseTitle).toUpperCase()} | ${grade} | LESSON ${lessonNum}
       </div>
       <div>
-        PAGE 1 OF 3
+        PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span>
       </div>
     </div>
   `;
