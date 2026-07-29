@@ -320,10 +320,16 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     /* CFU Block styling */
     .lesson-content [data-check-for-understanding="true"] {
       padding: 3px 15px !important;
-      margin: 16px 0 48px 0 !important;
+      margin: 8px 0 48px 0 !important;
       border-radius: 8px;
       background-size: 100% 100% !important;
       overflow: hidden;
+    }
+
+    /* h3 that directly follows a CFU clears floats and has top margin */
+    .lesson-content [data-check-for-understanding="true"] + h3 {
+      margin-top: 16px;
+      clear: both;
     }
 
     /* Use display:flow-root to create block formatting context for wrapped CFUs */
@@ -332,12 +338,6 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     .lesson-content .cfu-wrap-bottom-left,
     .lesson-content .cfu-wrap-bottom-right {
       display: flow-root;
-    }
-
-    /* h3 always clears floats and has top margin */
-    .lesson-content h3 {
-      margin-top: 32px !important;
-      clear: both;
     }
 
     .lesson-content [data-check-for-understanding="true"] table {
