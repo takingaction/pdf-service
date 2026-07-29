@@ -23,7 +23,7 @@ app.get('/health', (req, res) => {
 });
 
 /**
- * Inject page numbers using CSS Paged Media @page at-rules
+ * Inject page numbers - properly in footer area
  */
 function injectPageNumbers(html, course, lesson) {
   const courseTitle = (course?.title || 'Unknown Course').toUpperCase();
@@ -31,27 +31,37 @@ function injectPageNumbers(html, course, lesson) {
   const lessonNum = lesson?.lesson_number || '1';
   const leftText = `${courseTitle} | ${grade} | LESSON ${lessonNum}`;
 
-  const pageNumbersCss = `
+  const footerCss = `
     <style>
       @page {
-        margin: 0.5in 0.5in 0.8in 0.5in;
-        @bottom-left {
-          content: "${leftText}";
-          font-family: Arial, sans-serif;
-          font-size: 9pt;
-          color: #333;
-        }
-        @bottom-right {
-          content: "PAGE " counter(page);
-          font-family: Arial, sans-serif;
-          font-size: 9pt;
-          color: #333;
-        }
+        margin: 0.5in;
+        margin-bottom: 0.8in;
+        size: letter;
+      }
+      body {
+        margin: 0;
+        padding-bottom: 0;
+      }
+      .pdf-footer {
+        position: fixed;
+        bottom: 0.25in;
+        left: 0.5in;
+        right: 0.5in;
+        font-family: Arial, sans-serif;
+        font-size: 9pt;
+        color: #333333;
+        display: flex;
+        justify-content: space-between;
       }
     </style>
   `;
 
-  return html.replace('</head>', `${pageNumbersCss}</head>`);
+  const footerHtml = `<div class="pdf-footer"><span>${leftText}</span><span>PAGE <span class="page-num">1</span></span></div>`;
+
+  html = html.replace('</head>', `${footerCss}</head>`);
+  html = html.replace('</body>', `${footerHtml}</body>`);
+
+  return html;
 }
 
 /**
