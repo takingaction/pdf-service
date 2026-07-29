@@ -29,11 +29,17 @@ function buildFooterHtml(course, lesson) {
   const courseTitle = course?.title || 'Unknown Course';
   const grade = course?.grade || 'N/A';
   const lessonNum = lesson?.lesson_number || '1';
+  const year = new Date().getFullYear();
 
   return `
-    <div style="width: 100%; font-size: 9pt; font-family: Arial, Helvetica, sans-serif; padding: 0 0.5in; display: flex; justify-content: space-between; color: #333;">
-      <div>
-        ${escapeHtml(courseTitle).toUpperCase()} | ${grade} | LESSON ${lessonNum}
+    <div style="width: 100%; font-family: Arial, Helvetica, sans-serif; padding: 0 0.5in; color: #333;">
+      <div style="display: flex; justify-content: space-between; font-size: 9pt;">
+        <div>
+          ${escapeHtml(courseTitle).toUpperCase()} | ${grade} | LESSON ${lessonNum}
+        </div>
+      </div>
+      <div style="font-size: 7pt; margin-top: 2pt;">
+        &copy; ${year} Better Humans, LLC
       </div>
     </div>
   `;
