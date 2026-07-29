@@ -71,7 +71,7 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
     if (displayHeaderFooter && footerHtml) {
       pdfOptions.displayHeaderFooter = true;
       pdfOptions.footerTemplate = footerHtml;
-      pdfOptions.headerTemplate = '<div style="font-size: 1px;">&nbsp;</div>';
+      pdfOptions.headerTemplate = '<span style="display:none;"></span>';
     }
 
     const pdf = await page.pdf(pdfOptions);
@@ -104,15 +104,26 @@ function buildFooterHtml(course, lesson) {
 
   return `
     <style>
-      * { font-family: Arial, sans-serif; font-size: 9pt; margin: 0; padding: 0; }
+      body { margin: 0; padding: 0; }
+      .footer-wrap {
+        font-family: Arial, sans-serif;
+        font-size: 9pt;
+        color: #333;
+        width: 100%;
+        padding: 0 0.25in;
+        box-sizing: border-box;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .footer-wrap span {
+        font-size: 9pt;
+        display: inline;
+      }
     </style>
-    <div style="width: 100%; padding: 0 0.25in; box-sizing: border-box; color: #333;">
-      <div style="display: inline-block; width: 49%; vertical-align: middle;">
-        ${escapeHtml(courseTitle).toUpperCase()} | ${grade} | LESSON ${lessonNum}
-      </div>
-      <div style="display: inline-block; width: 49%; text-align: right; vertical-align: middle;">
-        PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span>
-      </div>
+    <div class="footer-wrap">
+      <div>${escapeHtml(courseTitle).toUpperCase()} | ${grade} | LESSON ${lessonNum}</div>
+      <div>PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span></div>
     </div>
   `;
 }
