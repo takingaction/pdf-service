@@ -57,9 +57,13 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
       margin: {
         top: '0.5in',
         right: '0.5in',
-        bottom: '0.8in',
+        bottom: '1in',
         left: '0.5in'
-      }
+      },
+      // TEST: Barebones footer to diagnose page number injection
+      displayHeaderFooter: true,
+      headerTemplate: '<span></span>',
+      footerTemplate: '<div style="font-size:12pt;color:red;font-family:Arial;">PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span></div>',
     };
 
     const pdf = await page.pdf(pdfOptions);
