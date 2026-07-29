@@ -77,16 +77,10 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
   try {
     browser = await puppeteer.launch({
-      args: [
-        ...chromium.args,
-        '--disable-dev-shm-usage',
-        '--disable-setuid-sandbox',
-        '--no-sandbox',
-        '--font-render-hinting=none',
-      ],
+      args: chromium.args,
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: 'new',
+      headless: chromium.headless,
     });
 
     const page = await browser.newPage();
@@ -106,7 +100,11 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
         right: '0.5in',
         bottom: '0.8in',
         left: '0.5in'
-      }
+      },
+      // TEST: barebones footer to check if pageNumber/totalPages injection works
+      displayHeaderFooter: true,
+      headerTemplate: '<span></span>',
+      footerTemplate: '<div style="font-size:12pt;color:red;font-family:Arial;">PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span></div>',
     };
 
     const pdf = await page.pdf(pdfOptions);
