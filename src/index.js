@@ -6,6 +6,7 @@
 const express = require('express');
 const puppeteer = require('puppeteer-core');
 const chromium = require('@sparticuz/chromium');
+const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 const { buildLessonPDFHtml } = require('./template');
 
 const app = express();
@@ -23,16 +24,64 @@ app.get('/health', (req, res) => {
 });
 
 /**
+ * Add page numbers to PDF using pdf-lib
+ * This is the reliable approach - bypasses Puppeteer/Chromium header injection issues
+ */
+async function addPageNumbers(pdfBytes, course, lesson) {
+  const pdfDoc = await PDFDocument.load(pdfBytes);
+  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const pages = pdfDoc.getPages();
+  const total = pages.length;
+
+  const courseTitle = (course?.title || 'Unknown Course').toUpperCase();
+  const grade = course?.grade || 'N/A';
+  const lessonNum = lesson?.lesson_number || '1';
+  const leftText = `${courseTitle} | ${grade} | LESSON ${lessonNum}`;
+
+  const fontSize = 9;
+  const y = 36; // 0.5in from bottom
+  const leftX = 36; // 0.5in
+  const rightPadding = 36; // 0.5in
+
+  for (let i = 0; i < pages.length; i++) {
+    const page = pages[i];
+    const { width } = page.getSize();
+
+    // Left: Course | Grade | Lesson X
+    page.drawText(leftText, {
+      x: leftX,
+      y,
+      size: fontSize,
+      font,
+      color: rgb(0.2, 0.2, 0.2),
+    });
+
+    // Right: PAGE X OF Y
+    const pageNumText = `PAGE ${i + 1} OF ${total}`;
+    const textWidth = font.widthOfTextAtSize(pageNumText, fontSize);
+    page.drawText(pageNumText, {
+      x: width - rightPadding - textWidth,
+      y,
+      size: fontSize,
+      font,
+      color: rgb(0.2, 0.2, 0.2),
+    });
+  }
+
+  return await pdfDoc.save();
+}
+
+/**
  * Generate PDF from HTML
  * @param {string} html - HTML content
  * @param {string} filename - filename for the PDF
- * @param {Object} options - { footerHtml, displayHeaderFooter }
+ * @param {Object} options - { course, lesson } for page number stamping
  * @returns {Promise<{pdf: Buffer, filename: string}>}
  */
 async function generatePDF(html, filename = 'document.pdf', options = {}) {
   let browser = null;
 
-  const { footerHtml = null, displayHeaderFooter = false } = options;
+  const { course = null, lesson = null } = options;
 
   try {
     browser = await puppeteer.launch({
@@ -68,17 +117,17 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
       }
     };
 
-    if (displayHeaderFooter && footerHtml) {
-      pdfOptions.displayHeaderFooter = true;
-      pdfOptions.footerTemplate = footerHtml;
-      pdfOptions.headerTemplate = '<span style="display:none;"></span>';
-    }
-
     const pdf = await page.pdf(pdfOptions);
 
     await browser.close();
 
-    return { pdf, filename };
+    // Add page numbers using pdf-lib (reliable, bypasses Chromium template issues)
+    let finalPdf = pdf;
+    if (course && lesson) {
+      finalPdf = await addPageNumbers(pdf, course, lesson);
+    }
+
+    return { pdf: finalPdf, filename };
 
   } catch (error) {
     if (browser) {
@@ -90,42 +139,6 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
     }
     throw error;
   }
-}
-
-/**
- * Build footer HTML for Puppeteer
- * NOTE: pageNumber and totalPages are Puppeteer template variables
- * IMPORTANT: All styles must be inline - header/footer templates are isolated
- */
-function buildFooterHtml(course, lesson) {
-  const courseTitle = course?.title || 'Unknown Course';
-  const grade = course?.grade || 'N/A';
-  const lessonNum = lesson?.lesson_number || '1';
-
-  return `
-    <style>
-      body { margin: 0; padding: 0; }
-      .footer-wrap {
-        font-family: Arial, sans-serif;
-        font-size: 9pt;
-        color: #333;
-        width: 100%;
-        padding: 0 0.25in;
-        box-sizing: border-box;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .footer-wrap span {
-        font-size: 9pt;
-        display: inline;
-      }
-    </style>
-    <div class="footer-wrap">
-      <div>${escapeHtml(courseTitle).toUpperCase()} | ${grade} | LESSON ${lessonNum}</div>
-      <div>PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span></div>
-    </div>
-  `;
 }
 
 function escapeHtml(text) {
@@ -190,13 +203,7 @@ app.post('/lesson-pdf', async (req, res) => {
     const safeFilename = filename ||
       `${lesson.title || `Lesson-${lesson.lesson_number}`}.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
 
-    // Build footer with course/lesson info
-    const footerHtml = buildFooterHtml(course, lesson);
-
-    const { pdf } = await generatePDF(html, safeFilename, {
-      footerHtml,
-      displayHeaderFooter: true
-    });
+    const { pdf } = await generatePDF(html, safeFilename, { course, lesson });
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
