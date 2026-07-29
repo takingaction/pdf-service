@@ -249,6 +249,18 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       min-width: 0;
     }
 
+    .left-column table {
+      table-layout: fixed;
+    }
+
+    .left-column table td:first-child {
+      width: 70%;
+    }
+
+    .left-column table td:last-child {
+      width: 30%;
+    }
+
     .right-column {
       flex: 1;
       min-width: 0;
