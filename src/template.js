@@ -316,6 +316,20 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       margin-bottom: 3px;
     }
 
+    /* CFU Block styling - must come before general table styles */
+    .lesson-content [data-check-for-understanding="true"] {
+      padding: 10px 14px;
+      margin: 10px 0;
+    }
+
+    .lesson-content [data-check-for-understanding="true"] table,
+    .lesson-content [data-check-for-understanding="true"] table td,
+    .lesson-content [data-check-for-understanding="true"] table th,
+    .lesson-content [data-check-for-understanding="true"] table tr {
+      border: none !important;
+      border-collapse: collapse;
+    }
+
     .lesson-content table {
       width: 100%;
       border-collapse: collapse;
@@ -394,21 +408,6 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     .lesson-content ol ol ol {
       list-style-type: lower-roman;
-    }
-
-    /* CFU Block styling */
-    .lesson-content [data-check-for-understanding="true"] {
-      padding: 10px 14px;
-      margin: 10px 0;
-    }
-
-    /* CFU internal table - no borders */
-    .lesson-content [data-check-for-understanding="true"] table,
-    .lesson-content [data-check-for-understanding="true"] table td,
-    .lesson-content [data-check-for-understanding="true"] table th,
-    .lesson-content [data-check-for-understanding="true"] table tr {
-      border: none !important;
-      border-collapse: collapse;
     }
 
     /* Table with grid disabled */
