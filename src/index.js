@@ -23,10 +23,51 @@ app.get('/health', (req, res) => {
 });
 
 /**
+ * Inject page numbers using CSS counters - works on all Chromium builds
+ */
+function injectPageNumberCss(html, course, lesson) {
+  const courseTitle = (course?.title || 'Unknown Course').toUpperCase();
+  const grade = course?.grade || 'N/A';
+  const lessonNum = lesson?.lesson_number || '1';
+  const leftText = `${courseTitle} | ${grade} | LESSON ${lessonNum}`;
+
+  const css = `
+    <style>
+      @page {
+        margin: 0.5in 0.5in 0.8in 0.5in;
+        counter-reset: page-counter;
+      }
+      .page-footer {
+        position: fixed;
+        bottom: 0.25in;
+        left: 0.5in;
+        right: 0.5in;
+        font-family: Arial, sans-serif;
+        font-size: 9pt;
+        color: #333;
+        display: flex;
+        justify-content: space-between;
+      }
+      .page-footer-right::after {
+        content: "PAGE " counter(page) " OF " counter(pages);
+      }
+    </style>
+    <div class="page-footer">
+      <span class="page-footer-left">${leftText}</span>
+      <span class="page-footer-right"></span>
+    </div>
+  `;
+
+  return html.replace('</body>', `${css}</body>`);
+}
+
+/**
  * Generate PDF from HTML
  */
 async function generatePDF(html, filename = 'document.pdf', options = {}) {
   let browser = null;
+
+  const { course = null, lesson = null } = options;
 
   try {
     browser = await puppeteer.launch({
@@ -57,13 +98,9 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
       margin: {
         top: '0.5in',
         right: '0.5in',
-        bottom: '1in',
+        bottom: '0.8in',
         left: '0.5in'
-      },
-      // TEST: Barebones footer to diagnose page number injection
-      displayHeaderFooter: true,
-      headerTemplate: '<span></span>',
-      footerTemplate: '<div style="font-size:12pt;color:red;font-family:Arial;">PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span></div>',
+      }
     };
 
     const pdf = await page.pdf(pdfOptions);
@@ -143,9 +180,14 @@ app.post('/lesson-pdf', async (req, res) => {
 
   try {
     const appUrl = process.env.APP_URL || 'https://bh-curriculum-management.vercel.app';
-    const html = buildLessonPDFHtml({ lesson, course, appUrl });
+    let html = buildLessonPDFHtml({ lesson, course, appUrl });
 
     console.log(`HTML input size: ${html.length} bytes (${(html.length / 1024 / 1024).toFixed(2)} MB)`);
+
+    // Inject page numbers via CSS counters
+    if (course && lesson) {
+      html = injectPageNumberCss(html, course, lesson);
+    }
 
     const safeFilename = filename ||
       `${lesson.title || `Lesson-${lesson.lesson_number}`}.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
