@@ -120,6 +120,8 @@ function buildRemainingSectionsHtml({ lesson }) {
       let headerClass = '';
       if (section.key === 'vapa_text_block' || section.key === 'ncas_text_block') {
         headerClass = 'gray';
+      } else if (section.key === 'assessment') {
+        headerClass = 'assessment';
       }
       return buildSectionHtml(section, lesson[section.key], headerClass);
     })
