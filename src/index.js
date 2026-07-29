@@ -114,16 +114,20 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
     await browser.close();
 
+    // Check base PDF size first - if already near limit, skip pdf-lib entirely
+    const SIZE_BUFFER = 500 * 1024; // 500KB buffer for safety
+    const basePdfSize = pdf.length;
+
     // Add page numbers using pdf-lib
     let finalPdf = pdf;
     let usedPdfLib = false;
 
-    if (course && lesson) {
+    if (course && lesson && basePdfSize < (MAX_FILE_SIZE - SIZE_BUFFER)) {
       try {
         finalPdf = await addPageNumbers(pdf, course, lesson);
         usedPdfLib = true;
 
-        // If still too large with pdf-lib, fall back to no page numbers
+        // If too large with pdf-lib, fall back to no page numbers
         if (finalPdf.length > MAX_FILE_SIZE) {
           console.log(`PDF too large with page numbers (${finalPdf.length} bytes), falling back`);
           finalPdf = pdf;
@@ -133,6 +137,8 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
         console.error('pdf-lib error, using PDF without page numbers:', err.message);
         finalPdf = pdf;
       }
+    } else if (basePdfSize >= (MAX_FILE_SIZE - SIZE_BUFFER)) {
+      console.log(`Base PDF too large (${basePdfSize} bytes), skipping page numbers`);
     }
 
     console.log(`Generated PDF: ${finalPdf.length} bytes, usedPdfLib: ${usedPdfLib}`);
