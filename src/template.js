@@ -318,7 +318,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     /* CFU Block styling */
     .lesson-content [data-check-for-understanding="true"] {
-      padding: 40px 60px;
+      padding: 20px 30px;
       margin: 10px 0;
       border-radius: 8px;
     }
@@ -391,14 +391,14 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     /* CFU cell styling */
     .lesson-content .cfu-text-cell h4 {
       margin: 0;
-      font-size: 18px;
+      font-size: 9px;
       font-weight: 700;
       color: #333;
     }
 
     .lesson-content .cfu-text-cell p {
       margin: 4px 0 0 0;
-      font-size: 16px;
+      font-size: 8px;
       color: #333;
     }
 
@@ -406,14 +406,14 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       width: 25%;
       vertical-align: middle;
       text-align: right;
-      padding: 8px;
+      padding: 4px;
     }
 
     .lesson-content .cfu-text-cell {
       width: 75%;
       vertical-align: middle;
       text-align: left;
-      padding: 8px;
+      padding: 4px;
     }
 
     /* General table styles - come after CFU to not override CFU borders */
