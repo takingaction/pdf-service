@@ -315,15 +315,24 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     /* Assessment table styling */
     .assessment-section table {
       border: 2px solid #e37c64;
+      table-layout: fixed;
+      width: 100% !important;
     }
 
     .assessment-section table th {
-      background-color: #e37c64;
-      color: white;
+      background-color: #e37c64 !important;
+      color: white !important;
+      font-weight: bold;
     }
 
     .assessment-section table td {
       border: 1px solid #e37c64;
+    }
+
+    /* Equal column widths - 4 columns = 25% each */
+    .assessment-section table th,
+    .assessment-section table td {
+      width: 25%;
     }
 
     .lesson-content {
