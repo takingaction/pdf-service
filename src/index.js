@@ -216,10 +216,14 @@ app.post('/lesson-pdf', async (req, res) => {
     const appUrl = process.env.APP_URL || 'https://bh-curriculum-management.vercel.app';
     const html = buildLessonPDFHtml({ lesson, course, appUrl });
 
+    console.log(`HTML input size: ${html.length} bytes (${(html.length / 1024 / 1024).toFixed(2)} MB)`);
+
     const safeFilename = filename ||
       `${lesson.title || `Lesson-${lesson.lesson_number}`}.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
 
     const { pdf } = await generatePDF(html, safeFilename, { course, lesson });
+
+    console.log(`PDF output size: ${pdf.length} bytes (${(pdf.length / 1024 / 1024).toFixed(2)} MB)`);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
