@@ -303,7 +303,8 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     .lesson-content h3 {
       font-size: 11pt;
       font-weight: bold;
-      margin: 10px 0 4px 0;
+      margin: 16px 0 4px 0;
+      clear: both;
     }
 
     .lesson-content ul,
@@ -319,7 +320,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     /* CFU Block styling */
     .lesson-content [data-check-for-understanding="true"] {
       padding: 3px 15px !important;
-      margin: 10px 0;
+      margin: 16px 0 24px 0 !important;
       border-radius: 8px;
       background-size: 100% 100% !important;
       position: relative;
@@ -349,6 +350,15 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     .lesson-content .cfu-wrap-bottom-left,
     .lesson-content .cfu-wrap-bottom-right {
       display: flow-root;
+    }
+
+    /* Force next element to clear after any CFU */
+    .lesson-content [data-check-for-understanding="true"] + h3,
+    .lesson-content [data-check-for-understanding="true"] + p,
+    .lesson-content [data-check-for-understanding="true"] + ul,
+    .lesson-content [data-check-for-understanding="true"] + ol {
+      clear: both;
+      margin-top: 24px;
     }
 
     .lesson-content [data-check-for-understanding="true"] table {
