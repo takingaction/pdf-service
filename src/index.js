@@ -185,10 +185,13 @@ app.post('/pdf', async (req, res) => {
   try {
     const { pdf, filename: safeFilename } = await generatePDF(html, filename);
 
+    // Convert Uint8Array to Buffer for reliable binary transfer
+    const pdfBuffer = Buffer.from(pdf);
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
-    res.setHeader('Content-Length', pdf.length);
-    res.send(pdf);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.send(pdfBuffer);
 
   } catch (error) {
     console.error('PDF generation error:', error);
@@ -225,10 +228,13 @@ app.post('/lesson-pdf', async (req, res) => {
 
     console.log(`PDF output size: ${pdf.length} bytes (${(pdf.length / 1024 / 1024).toFixed(2)} MB)`);
 
+    // Convert Uint8Array to Buffer for reliable binary transfer
+    const pdfBuffer = Buffer.from(pdf);
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
-    res.setHeader('Content-Length', pdf.length);
-    res.send(pdf);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.send(pdfBuffer);
 
   } catch (error) {
     console.error('Lesson PDF error:', error);
