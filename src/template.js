@@ -319,7 +319,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     /* CFU Block styling */
     .lesson-content [data-check-for-understanding="true"] {
-      padding: 3px 15px !important;
+      padding: 3px 20px !important;
       margin: 8px 0 48px 0 !important;
       border-radius: 8px;
       background-size: 100% 100% !important;
