@@ -402,14 +402,11 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       margin: 10px 0;
     }
 
-    /* CFU internal table borders */
-    .lesson-content [data-cfu-id] table {
-      border: 1px solid #333;
-    }
-
+    /* CFU internal table - no borders */
+    .lesson-content [data-cfu-id] table,
     .lesson-content [data-cfu-id] table td,
     .lesson-content [data-cfu-id] table th {
-      border: 1px solid #333;
+      border: none;
     }
 
     /* Table with grid disabled */
