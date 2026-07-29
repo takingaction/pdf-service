@@ -304,7 +304,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     .lesson-content h3 {
       font-size: 11pt;
       font-weight: bold;
-      margin: 16px 0 4px 0;
+      margin: 4px 0 4px 0;
     }
 
     .lesson-content ul,
