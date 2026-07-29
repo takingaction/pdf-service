@@ -352,13 +352,10 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       display: flow-root;
     }
 
-    /* Force next element to clear after any CFU */
-    .lesson-content [data-check-for-understanding="true"] + h3,
-    .lesson-content [data-check-for-understanding="true"] + p,
-    .lesson-content [data-check-for-understanding="true"] + ul,
-    .lesson-content [data-check-for-understanding="true"] + ol {
+    /* Force h3 to clear after any CFU (but allow p/ul to wrap) */
+    .lesson-content [data-check-for-understanding="true"] + h3 {
       clear: both;
-      margin-top: 24px;
+      margin-top: 16px;
     }
 
     .lesson-content [data-check-for-understanding="true"] table {
