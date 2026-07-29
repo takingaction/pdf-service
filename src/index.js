@@ -88,6 +88,7 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
 /**
  * Build footer HTML for Puppeteer
+ * NOTE: pageNumber and totalPages are Puppeteer template variables
  */
 function buildFooterHtml(course, lesson) {
   const courseTitle = course?.title || 'Unknown Course';
