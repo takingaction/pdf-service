@@ -398,10 +398,14 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     /* CFU Block styling */
     .lesson-content [data-cfu-id] {
-      background-color: #f9f9f9;
-      border-left: 4px solid #666;
       padding: 10px 14px;
       margin: 10px 0;
+    }
+
+    /* Table with grid disabled */
+    .lesson-content table[data-show-grid="false"] td,
+    .lesson-content table[data-show-grid="false"] th {
+      border: none;
     }
 
     /* Remaining sections */
