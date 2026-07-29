@@ -304,7 +304,6 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       font-size: 11pt;
       font-weight: bold;
       margin: 16px 0 4px 0;
-      clear: both;
     }
 
     .lesson-content ul,
@@ -324,12 +323,6 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       border-radius: 8px;
       background-size: 100% 100% !important;
       overflow: hidden;
-    }
-
-    /* h3 that directly follows a CFU clears floats and has top margin */
-    .lesson-content [data-check-for-understanding="true"] + h3 {
-      margin-top: 16px;
-      clear: both;
     }
 
     /* Use display:flow-root to create block formatting context for wrapped CFUs */
@@ -399,10 +392,10 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       margin: 16px auto 0 auto;
     }
 
-    /* Override bottom margin for top-wrapped CFUs to prevent overlap */
+    /* Override bottom margin for wrapped CFUs to prevent overlap - MUST come after all margin rules */
     .lesson-content .cfu-wrap-top-left,
     .lesson-content .cfu-wrap-top-right {
-      margin-bottom: 48px !important;
+      margin-bottom: 96px !important;
     }
 
     /* Clear floats after non-wrapped CFU */
