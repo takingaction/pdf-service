@@ -191,7 +191,9 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     .title-content {
       padding: 0.2in 0.75in;
-      text-align: center;
+      text-align: left;
+      background-color: #e37c64;
+      color: white;
     }
 
     .performers-ready {
@@ -205,7 +207,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     .course-info {
       font-size: 18pt;
       font-weight: normal;
-      color: #333;
+      color: inherit;
       margin: 0;
       text-transform: uppercase;
       letter-spacing: 1px;
