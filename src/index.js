@@ -22,54 +22,6 @@ app.get('/health', (req, res) => {
 });
 
 /**
- * Inject page numbers using CSS counters with @page auto-increment
- */
-function injectPageNumbers(html, course, lesson) {
-  const courseTitle = (course?.title || 'Unknown Course').toUpperCase();
-  const grade = course?.grade || 'N/A';
-  const lessonNum = lesson?.lesson_number || '1';
-  const leftText = `${courseTitle} | ${grade} | LESSON ${lessonNum}`;
-
-  const footerCss = `
-    <style>
-      @page {
-        margin: 0.5in;
-        margin-bottom: 0.8in;
-        size: letter;
-        counter-increment: page;
-      }
-      body {
-        margin: 0;
-      }
-      .pdf-footer {
-        position: fixed;
-        bottom: 0.25in;
-        left: 0.5in;
-        right: 0.5in;
-        font-family: Arial, sans-serif;
-        font-size: 9pt;
-        color: #333333;
-        display: flex;
-        justify-content: space-between;
-      }
-      .pdf-footer-left::before {
-        content: "${leftText}";
-      }
-      .pdf-footer-right::before {
-        content: "PAGE " counter(page);
-      }
-    </style>
-  `;
-
-  const footerHtml = `<div class="pdf-footer"><span class="pdf-footer-left"></span><span class="pdf-footer-right"></span></div>`;
-
-  html = html.replace('</head>', `${footerCss}</head>`);
-  html = html.replace('</body>', `${footerHtml}</body>`);
-
-  return html;
-}
-
-/**
  * Generate PDF from HTML
  */
 async function generatePDF(html, filename = 'document.pdf', options = {}) {
@@ -78,7 +30,7 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
   const { course = null, lesson = null } = options;
 
   try {
-    const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || await chromium.executablePath();
+    const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
 
     browser = await puppeteer.launch({
       executablePath,
@@ -94,11 +46,6 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
     const page = await browser.newPage();
 
-    // Inject page numbers via CSS before rendering
-    if (course && lesson) {
-      html = injectPageNumbers(html, course, lesson);
-    }
-
     await page.setContent(html, {
       waitUntil: ['domcontentloaded', 'networkidle0'],
       timeout: 60000
@@ -106,7 +53,8 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
     await page.waitForTimeout(1000);
 
-    const pdfOptions = {
+    // Use native header/footer with pageNumber/totalPages - works with full Chromium
+    let pdfOptions = {
       format: 'Letter',
       printBackground: true,
       margin: {
@@ -116,6 +64,28 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
         left: '0.5in'
       }
     };
+
+    if (course && lesson) {
+      const courseTitle = (course?.title || 'Unknown Course').toUpperCase();
+      const grade = course?.grade || 'N/A';
+      const lessonNum = lesson?.lesson_number || '1';
+
+      pdfOptions = {
+        ...pdfOptions,
+        displayHeaderFooter: true,
+        headerTemplate: '<span></span>',
+        footerTemplate: `
+          <div style="width: 100%; font-size: 9pt; font-family: Arial, sans-serif; padding: 0 0.25in; box-sizing: border-box; color: #333;">
+            <div style="display: inline-block; width: 49%; vertical-align: middle;">
+              ${courseTitle} | ${grade} | LESSON ${lessonNum}
+            </div>
+            <div style="display: inline-block; width: 49%; text-align: right; vertical-align: middle;">
+              PAGE <span class="pageNumber"></span> OF <span class="totalPages"></span>
+            </div>
+          </div>
+        `,
+      };
+    }
 
     const pdf = await page.pdf(pdfOptions);
 
