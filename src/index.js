@@ -35,7 +35,7 @@ function buildFooterHtml(course, lesson) {
     <div style="width: 100%; font-family: Arial, Helvetica, sans-serif; padding: 0 0.5in; color: #333;">
       <div style="display: flex; justify-content: space-between; font-size: 9pt;">
         <div>
-          ${escapeHtml(courseTitle).toUpperCase()} | ${grade} | LESSON ${lessonNum}
+          ${escapeHtml(courseTitle).toUpperCase()} | GRADE ${grade} | LESSON ${lessonNum}
         </div>
       </div>
       <div style="font-size: 7pt; margin-top: 2pt;">
