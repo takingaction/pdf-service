@@ -35,7 +35,9 @@ function injectPageNumberCss(html, course, lesson) {
     <style>
       @page {
         margin: 0.5in 0.5in 0.8in 0.5in;
-        counter-reset: page-counter;
+      }
+      html {
+        counter-reset: page;
       }
       .page-footer {
         position: fixed;
@@ -48,12 +50,16 @@ function injectPageNumberCss(html, course, lesson) {
         display: flex;
         justify-content: space-between;
       }
+      .page-footer-left::before {
+        counter-increment: page;
+        content: "${leftText}";
+      }
       .page-footer-right::after {
         content: "PAGE " counter(page) " OF " counter(pages);
       }
     </style>
     <div class="page-footer">
-      <span class="page-footer-left">${leftText}</span>
+      <span class="page-footer-left"></span>
       <span class="page-footer-right"></span>
     </div>
   `;
