@@ -6,7 +6,7 @@
 const express = require('express');
 const puppeteer = require('puppeteer-core');
 const chromium = require('@sparticuz/chromium');
-const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
+const HummusRecipe = require('hummus-recipe');
 const { buildLessonPDFHtml } = require('./template');
 
 const app = express();
@@ -24,34 +24,51 @@ app.get('/health', (req, res) => {
 });
 
 /**
- * Add page numbers to PDF using pdf-lib
- * useObjectStreams: true compresses output back to original size
+ * Add page numbers to PDF using hummus-recipe
+ * hummus-recipe appends to PDF stream without decompressing/re-encoding
  */
 async function addPageNumbers(pdfBytes, course, lesson) {
-  const pdfDoc = await PDFDocument.load(pdfBytes, { updateMetadata: false });
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica, { subset: false });
-  const pages = pdfDoc.getPages();
-  const total = pages.length;
-
   const courseTitle = (course?.title || 'Unknown Course').toUpperCase();
   const grade = course?.grade || 'N/A';
   const lessonNum = lesson?.lesson_number || '1';
   const leftText = `${courseTitle} | ${grade} | LESSON ${lessonNum}`;
-  const fontSize = 9;
-  const y = 22;
 
-  for (let i = 0; i < pages.length; i++) {
-    const page = pages[i];
-    const { width } = page.getSize();
-    page.drawText(leftText, { x: 36, y, size: fontSize, font, color: rgb(0.2, 0.2, 0.2) });
-    const pageNumText = `PAGE ${i + 1} OF ${total}`;
-    const textWidth = font.widthOfTextAtSize(pageNumText, fontSize);
-    page.drawText(pageNumText, { x: width - 36 - textWidth, y, size: fontSize, font, color: rgb(0.2, 0.2, 0.2) });
-  }
+  const inputBuffer = Buffer.from(pdfBytes);
+  const outputBuffer = [];
 
-  return await pdfDoc.save({
-    useObjectStreams: true,
-    addDefaultPage: false,
+  return new Promise((resolve, reject) => {
+    try {
+      const recipe = new HummusRecipe(inputBuffer);
+
+      const totalPages = recipe.totalPages;
+
+      for (let i = 1; i <= totalPages; i++) {
+        recipe.editPage(i)
+          .text(leftText, 36, 22, {
+            color: '#333333',
+            size: 9,
+            font: 'Helvetica',
+          })
+          .text(`PAGE ${i} OF ${totalPages}`, null, 22, {
+            color: '#333333',
+            size: 9,
+            font: 'Helvetica',
+            align: 'right',
+            marginRight: 36,
+          })
+          .endPage();
+      }
+
+      recipe.endPDF((err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(Buffer.from(result));
+        }
+      });
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
@@ -101,21 +118,21 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
     await browser.close();
 
-    // Add page numbers using pdf-lib with compression
+    // Add page numbers using hummus-recipe
     let finalPdf = pdf;
-    let usedPdfLib = false;
+    let usedHummus = false;
 
     if (course && lesson) {
       try {
         finalPdf = await addPageNumbers(pdf, course, lesson);
-        usedPdfLib = true;
+        usedHummus = true;
       } catch (err) {
-        console.error('pdf-lib error, using PDF without page numbers:', err.message);
+        console.error('hummus-recipe error, using PDF without page numbers:', err.message);
         finalPdf = pdf;
       }
     }
 
-    console.log(`PDF output size: ${finalPdf.length} bytes (${(finalPdf.length / 1024 / 1024).toFixed(2)} MB), usedPdfLib: ${usedPdfLib}`);
+    console.log(`PDF output size: ${finalPdf.length} bytes (${(finalPdf.length / 1024 / 1024).toFixed(2)} MB), usedHummus: ${usedHummus}`);
 
     return { pdf: finalPdf, filename };
 
