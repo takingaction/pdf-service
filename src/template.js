@@ -284,6 +284,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       text-transform: uppercase;
       padding: 8px 12px;
       margin-bottom: 8px;
+      clear: both;
     }
 
     .lesson-content {
@@ -304,11 +305,6 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       font-size: 11pt;
       font-weight: bold;
       margin: 16px 0 4px 0;
-    }
-
-    /* h3 immediately after a wrapped CFU needs extra top margin */
-    .lesson-content [data-check-for-understanding][class*="wrap"] + h3 {
-      margin-top: 96px;
     }
 
     .lesson-content ul,
