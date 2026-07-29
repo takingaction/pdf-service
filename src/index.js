@@ -23,7 +23,7 @@ app.get('/health', (req, res) => {
 });
 
 /**
- * Inject page numbers using CSS counters
+ * Inject page numbers using CSS Paged Media @page at-rules
  */
 function injectPageNumbers(html, course, lesson) {
   const courseTitle = (course?.title || 'Unknown Course').toUpperCase();
@@ -31,30 +31,27 @@ function injectPageNumbers(html, course, lesson) {
   const lessonNum = lesson?.lesson_number || '1';
   const leftText = `${courseTitle} | ${grade} | LESSON ${lessonNum}`;
 
-  const footer = `
+  const pageNumbersCss = `
     <style>
-      .pdf-footer {
-        position: fixed;
-        bottom: 0.25in;
-        left: 0.5in;
-        right: 0.5in;
-        font-family: Arial, sans-serif;
-        font-size: 9pt;
-        color: #333333;
-        display: flex;
-        justify-content: space-between;
-      }
-      .pdf-footer-right::after {
-        content: counter(page);
+      @page {
+        margin: 0.5in 0.5in 0.8in 0.5in;
+        @bottom-left {
+          content: "${leftText}";
+          font-family: Arial, sans-serif;
+          font-size: 9pt;
+          color: #333;
+        }
+        @bottom-right {
+          content: "PAGE " counter(page);
+          font-family: Arial, sans-serif;
+          font-size: 9pt;
+          color: #333;
+        }
       }
     </style>
-    <div class="pdf-footer">
-      <span>${leftText}</span>
-      <span class="pdf-footer-right">PAGE </span>
-    </div>
   `;
 
-  return html.replace('</body>', `${footer}</body>`);
+  return html.replace('</head>', `${pageNumbersCss}</head>`);
 }
 
 /**
