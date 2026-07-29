@@ -23,7 +23,7 @@ app.get('/health', (req, res) => {
 });
 
 /**
- * Inject page numbers using CSS counters
+ * Inject page numbers using CSS counters with @page auto-increment
  */
 function injectPageNumbers(html, course, lesson) {
   const courseTitle = (course?.title || 'Unknown Course').toUpperCase();
@@ -37,13 +37,10 @@ function injectPageNumbers(html, course, lesson) {
         margin: 0.5in;
         margin-bottom: 0.8in;
         size: letter;
-      }
-      html {
-        counter-reset: page;
+        counter-increment: page;
       }
       body {
         margin: 0;
-        padding-bottom: 0;
       }
       .pdf-footer {
         position: fixed;
@@ -57,7 +54,6 @@ function injectPageNumbers(html, course, lesson) {
         justify-content: space-between;
       }
       .pdf-footer-left::before {
-        counter-increment: page;
         content: "${leftText}";
       }
       .pdf-footer-right::before {
