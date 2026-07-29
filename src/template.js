@@ -322,6 +322,25 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       margin: 10px 0;
       border-radius: 8px;
       background-size: 100% 100% !important;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Ensure siblings respect z-index */
+    .lesson-content h3,
+    .lesson-content h4,
+    .lesson-content p,
+    .lesson-content ul,
+    .lesson-content ol {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Clearfix for all wrapped CFUs */
+    .lesson-content [data-check-for-understanding][class*="wrap"]::after {
+      content: "";
+      display: table;
+      clear: both;
     }
 
     .lesson-content [data-check-for-understanding="true"] table {
@@ -376,6 +395,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     .lesson-content .cfu-wrap-bottom-right {
       float: right;
       margin: 16px 0 0 16px;
+      clear: left;
     }
 
     .lesson-content .cfu-wrap-bottom-center {
