@@ -306,6 +306,11 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       margin: 16px 0 4px 0;
     }
 
+    /* h3 immediately after a wrapped CFU needs extra top margin */
+    .lesson-content [class*="wrap"] + h3 {
+      margin-top: 96px;
+    }
+
     .lesson-content ul,
     .lesson-content ol {
       margin: 0 0 6px 0;
