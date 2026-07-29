@@ -30,19 +30,38 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
   const { course = null, lesson = null } = options;
 
   try {
-    const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
+    // Try multiple possible chromium paths
+    const possiblePaths = [
+      process.env.PUPPETEER_EXECUTABLE_PATH,
+      '/usr/bin/chromium',
+      '/usr/bin/chromium-browser',
+      '/usr/bin/google-chrome',
+      '/usr/bin/google-chrome-stable',
+    ].filter(Boolean);
 
-    browser = await puppeteer.launch({
-      executablePath,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--font-render-hinting=none',
-      ],
-      headless: true,
-    });
+    let browser;
+    for (const executablePath of possiblePaths) {
+      try {
+        browser = await puppeteer.launch({
+          executablePath,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+          ],
+          headless: true,
+        });
+        console.log(`Browser launched with: ${executablePath}`);
+        break;
+      } catch (e) {
+        console.log(`Failed to launch with ${executablePath}: ${e.message}`);
+      }
+    }
+
+    if (!browser) {
+      throw new Error('Could not find a working Chrome/Chromium executable');
+    }
 
     const page = await browser.newPage();
 
