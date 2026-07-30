@@ -168,6 +168,10 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
   const titlePage = buildTitlePage({ lesson, course, appUrl });
   const page2Html = buildPage2Html({ lesson });
   const remainingHtml = buildRemainingSectionsHtml({ lesson, appUrl });
+  const logoEndUrl = appUrl
+    ? `${appUrl}/images/logo-end.jpg`
+    : `https://bh-curriculum-management.vercel.app/images/logo-end.jpg`;
+  const logoEndHtml = `<div class="logo-end-container"><img src="${logoEndUrl}" alt="" class="logo-end" /></div>`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -665,12 +669,25 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     .footer {
       display: none;
     }
+
+    /* Logo end - centered below assessment table */
+    .logo-end-container {
+      text-align: center;
+      padding-top: 40px;
+      padding-bottom: 40px;
+    }
+
+    .logo-end {
+      width: 35%;
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
   ${titlePage}
   ${page2Html}
   ${remainingHtml}
+  ${logoEndHtml}
 </body>
 </html>`;
 
