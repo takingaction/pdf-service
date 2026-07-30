@@ -396,12 +396,9 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       width: calc(100% + 0.5in + 0.5in);
       margin-left: -0.5in;
       margin-right: -0.5in;
-      margin-top: 0;
-      margin-bottom: 40px;
-    }
-
-    .page-break-image-container + .section {
-      margin-top: 0;
+      overflow: hidden;
+      padding-bottom: 40px;
+      box-sizing: border-box;
     }
 
     .page-break-top {
