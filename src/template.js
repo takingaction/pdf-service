@@ -303,6 +303,11 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       width: 30%;
     }
 
+    /* Lesson Outline - tighter bullet spacing */
+    .left-column .lesson-content li {
+      margin-bottom: 1px;
+    }
+
     .right-column {
       flex: 1;
       min-width: 0;
