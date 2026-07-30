@@ -195,11 +195,6 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       margin: 0;
     }
 
-    @page assessment {
-      size: letter;
-      margin: 0;
-    }
-
     * {
       box-sizing: border-box;
     }
@@ -374,7 +369,6 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     .assessment-section {
       margin-bottom: 0;
       break-before: page;
-      page: assessment;
     }
 
     .assessment-section table {
