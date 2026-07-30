@@ -679,6 +679,8 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       text-align: center;
       padding-top: 20px;
       padding-bottom: 20px;
+      margin-top: -48px;
+      margin-bottom: 0;
     }
 
     .logo-end {
