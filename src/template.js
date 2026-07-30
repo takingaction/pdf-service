@@ -114,7 +114,16 @@ function buildPage2Html({ lesson }) {
 /**
  * Build remaining sections as full-width
  */
-function buildRemainingSectionsHtml({ lesson }) {
+function buildRemainingSectionsHtml({ lesson, appUrl }) {
+  const getImageUrl = (filename) => {
+    return appUrl
+      ? `${appUrl}/images/${filename}`
+      : `https://bh-curriculum-management.vercel.app/images/${filename}`;
+  };
+
+  const page3Image = `<img src="${getImageUrl('page3.png')}" class="page-break-image" />`;
+  const lastPageImage = `<img src="${getImageUrl('last-page.png')}" class="page-break-image" />`;
+
   const sectionsHtml = REMAINING_SECTIONS
     .map(section => {
       let headerClass = '';
@@ -123,9 +132,17 @@ function buildRemainingSectionsHtml({ lesson }) {
       } else if (section.key === 'assessment') {
         headerClass = 'assessment';
       }
-      return buildSectionHtml(section, lesson[section.key], headerClass);
+
+      let html = '';
+      if (section.key === 'welcome_opening') {
+        html += page3Image;
+      } else if (section.key === 'closing_ceremony') {
+        html += lastPageImage;
+      }
+
+      html += buildSectionHtml(section, lesson[section.key], headerClass);
+      return html;
     })
-    .filter(Boolean)
     .join('');
 
   return `
@@ -143,7 +160,7 @@ function buildRemainingSectionsHtml({ lesson }) {
 function buildLessonPDFHtml({ lesson, course, appUrl }) {
   const titlePage = buildTitlePage({ lesson, course, appUrl });
   const page2Html = buildPage2Html({ lesson });
-  const remainingHtml = buildRemainingSectionsHtml({ lesson });
+  const remainingHtml = buildRemainingSectionsHtml({ lesson, appUrl });
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -342,6 +359,16 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     .assessment-section table th,
     .assessment-section table td {
       width: 25%;
+    }
+
+    /* Page break images */
+    .page-break-image {
+      width: 100%;
+      display: block;
+      margin: 0;
+      padding: 0;
+      object-fit: contain;
+      break-before: page;
     }
 
     .lesson-content {
