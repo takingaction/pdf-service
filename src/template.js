@@ -81,6 +81,9 @@ function buildTitlePage({ lesson, course, appUrl }) {
  * Build page 2 with 2-column layout
  */
 function buildPage2Html({ lesson }) {
+  const lessonNumber = lesson.lesson_number || '?';
+  const lessonTitle = lesson.title || '';
+
   const leftContent = PAGE_2_LEFT_SECTIONS
     .map(key => {
       const section = SECTIONS.find(s => s.key === key);
@@ -99,6 +102,10 @@ function buildPage2Html({ lesson }) {
 
   return `
     <div class="page2-container">
+      <div class="page2-header">
+        <div class="lesson-plan-label">LESSON PLAN: CLASS ${lessonNumber}</div>
+        <div class="lesson-title">&#8220;${escapeHtml(lessonTitle)}&#8221;</div>
+      </div>
       <div class="two-column">
         <div class="left-column">
           ${leftContent}
@@ -294,6 +301,24 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       gap: 16px;
     }
 
+    /* Page 2 Header */
+    .page2-header {
+      margin-bottom: 40px;
+    }
+
+    .lesson-plan-label {
+      font-size: 18pt;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .lesson-title {
+      font-size: 24pt;
+      font-weight: bold;
+      color: #333;
+    }
+
     /* Section Styling */
     .section {
       margin-bottom: 16px;
@@ -329,11 +354,6 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       font-weight: bold;
     }
 
-    /* Assessment section - page break */
-    .assessment-section {
-      break-before: page;
-    }
-
     /* Assessment table styling */
     .assessment-section table {
       border: 2px solid #e37c64;
@@ -366,7 +386,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       width: calc(100% + 1in);
       margin-left: -0.5in;
       overflow: hidden;
-      margin-bottom: 20px;
+      margin-bottom: 40px;
     }
 
     .page-break-top {
