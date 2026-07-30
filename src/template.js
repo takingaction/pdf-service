@@ -354,6 +354,11 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       font-weight: bold;
     }
 
+    /* Assessment section - start on new page */
+    .assessment-section {
+      break-before: page;
+    }
+
     /* Assessment table styling */
     .assessment-section table {
       border: 2px solid #e37c64;
@@ -381,12 +386,12 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       width: 25%;
     }
 
-    /* Page break images - extend into margins for flush edges */
+    /* Page break images - flush to page edges */
     .page-break-image-container {
       width: calc(100% + 1in);
       margin-left: -0.5in;
-      overflow: hidden;
       margin-bottom: 40px;
+      padding: 0;
     }
 
     .page-break-top {
