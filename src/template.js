@@ -368,7 +368,6 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     /* Assessment table styling */
     .assessment-section {
       margin-bottom: 0;
-      break-before: page;
     }
 
     .assessment-section table {
@@ -676,7 +675,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       text-align: center;
       padding-top: 20px;
       padding-bottom: 20px;
-      margin-top: -48px;
+      margin-top: 40px;
       margin-bottom: 0;
     }
 
