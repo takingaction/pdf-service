@@ -204,7 +204,11 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     }
 
     .remaining-sections {
-      padding: 0.5in;
+      padding: 0 0.5in 0.5in 0.5in;
+    }
+
+    .remaining-sections .section {
+      padding-top: 0.5in;
     }
 
     /* Title Page */
@@ -387,9 +391,12 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       width: 25%;
     }
 
-    /* Page break images - flush to page edges */
+    /* Page break images - flush to page edges (override parent padding) */
     .page-break-image-container {
-      width: 100%;
+      width: calc(100% + 0.5in + 0.5in);
+      margin-left: -0.5in;
+      margin-right: -0.5in;
+      margin-top: 0;
       margin-bottom: 40px;
     }
 
@@ -399,6 +406,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     .page-break-image {
       width: 100%;
+      margin: 0;
       display: block;
       object-fit: contain;
     }
