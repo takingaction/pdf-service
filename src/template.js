@@ -375,14 +375,12 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       margin-bottom: 0;
       break-before: page;
       page: assessment;
-      break-inside: avoid;
     }
 
     .assessment-section table {
       border: 2px solid #e37c64;
       table-layout: fixed;
       width: 100% !important;
-      break-inside: avoid;
     }
 
     /* Header row - coral bg with white text */
@@ -494,51 +492,51 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     /* CFU alignment classes - float-based positioning */
     .lesson-content .cfu-wrap-top-left {
       float: left;
-      margin: 0 20px 16px 0;
+      margin: 0 20px 16px 0 !important;
     }
 
     .lesson-content .cfu-wrap-top-right {
       float: right;
-      margin: 0 0 16px 20px;
+      margin: 0 0 16px 20px !important;
     }
 
     .lesson-content .cfu-wrap-top-center {
-      margin: 0 auto 16px auto;
+      margin: 0 auto 16px auto !important;
     }
 
     .lesson-content .cfu-left {
       float: left;
-      margin-right: 20px;
+      margin-right: 20px !important;
     }
 
     .lesson-content .cfu-right {
       float: right;
-      margin-left: 20px;
+      margin-left: 20px !important;
     }
 
     .lesson-content .cfu-center {
-      margin: 0 auto;
+      margin: 0 auto !important;
     }
 
     .lesson-content .cfu-wrap-bottom-left {
       float: left;
-      margin: 16px 20px 0 0;
+      margin: 16px 20px 0 0 !important;
     }
 
     .lesson-content .cfu-wrap-bottom-right {
       float: right;
-      margin: 16px 0 0 20px;
+      margin: 16px 0 0 20px !important;
       clear: left;
     }
 
     .lesson-content .cfu-wrap-bottom-center {
-      margin: 16px auto 0 auto;
+      margin: 16px auto 0 auto !important;
     }
 
     /* Override bottom margin for wrapped CFUs to prevent overlap - MUST come after all margin rules */
     .lesson-content .cfu-wrap-top-left,
     .lesson-content .cfu-wrap-top-right {
-      margin-bottom: 96px !important;
+      margin-bottom: 20px !important;
     }
 
     /* Clear floats after non-wrapped CFU */
