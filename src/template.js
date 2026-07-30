@@ -135,7 +135,7 @@ function buildRemainingSectionsHtml({ lesson, appUrl }) {
 
       let html = '';
       if (section.key === 'welcome_opening') {
-        html += `<div class="page-break-image-container">${page3Image}</div>`;
+        html += `<div class="page-break-image-container page-break-top">${page3Image}</div>`;
       } else if (section.key === 'assessment') {
         html += `<div class="page-break-image-container">${lastPageImage}</div>`;
       }
@@ -367,6 +367,9 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       margin-left: -0.5in;
       overflow: hidden;
       margin-bottom: 20px;
+    }
+
+    .page-break-top {
       break-before: page;
     }
 
