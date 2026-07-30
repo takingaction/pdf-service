@@ -122,7 +122,7 @@ function buildRemainingSectionsHtml({ lesson, appUrl }) {
   };
 
   const page3Image = `<img src="${getImageUrl('page3.png')}" class="page-break-image" />`;
-  const lastPageImage = `<img src="${getImageUrl('last-page.png')}" class="page-break-image" />`;
+  const lastPageImage = `<img src="${getImageUrl('last-page.png')}" class="page-break-image page-break-last" />`;
 
   const sectionsHtml = REMAINING_SECTIONS
     .map(section => {
@@ -136,7 +136,7 @@ function buildRemainingSectionsHtml({ lesson, appUrl }) {
       let html = '';
       if (section.key === 'welcome_opening') {
         html += page3Image;
-      } else if (section.key === 'closing_ceremony') {
+      } else if (section.key === 'assessment') {
         html += lastPageImage;
       }
 
@@ -361,14 +361,14 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       width: 25%;
     }
 
-    /* Page break images */
+    /* Page break images - edge to edge */
     .page-break-image {
-      width: 100%;
+      width: calc(100% + 1in);
+      margin-left: -0.5in;
       display: block;
-      margin: 0;
-      padding: 0;
       object-fit: contain;
       break-before: page;
+      margin-bottom: 20px;
     }
 
     .lesson-content {
