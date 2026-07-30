@@ -128,7 +128,6 @@ function buildRemainingSectionsHtml({ lesson, appUrl }) {
       : `https://bh-curriculum-management.vercel.app/images/${filename}`;
   };
 
-  const page3Image = `<img src="${getImageUrl('page3.png')}" class="page-break-image" />`;
   const lastPageImage = `<img src="${getImageUrl('last-page.png')}" class="page-break-image page-break-last" />`;
 
   const sectionsHtml = REMAINING_SECTIONS
@@ -141,9 +140,7 @@ function buildRemainingSectionsHtml({ lesson, appUrl }) {
       }
 
       let html = '';
-      if (section.key === 'vapa_text_block' || section.key === 'ncas_text_block') {
-        html += `<div class="page-break-image-container page-break-top">${page3Image}</div>`;
-      } else if (section.key === 'assessment') {
+      if (section.key === 'assessment') {
         html += `<div class="page-break-image-container page-break-top">${lastPageImage}</div>`;
       }
 
@@ -182,10 +179,15 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
   <style>
     @page {
       size: letter;
-      margin: 0;
+      margin: 0.5in;
     }
 
     @page :first {
+      size: letter;
+      margin: 0;
+    }
+
+    @page assessment {
       size: letter;
       margin: 0;
     }
@@ -202,17 +204,9 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       padding: 0;
     }
 
-    /* Content containers with fake margins */
+    /* Page 2 */
     .page2-container {
       padding: 0.5in;
-    }
-
-    .remaining-sections {
-      padding: 0 0.5in 0.5in 0.5in;
-    }
-
-    .remaining-sections .section {
-      padding-top: 0.5in;
     }
 
     /* Title Page */
@@ -371,6 +365,8 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     /* Assessment table styling */
     .assessment-section {
       margin-bottom: 0;
+      break-before: page;
+      page: assessment;
     }
 
     .assessment-section table {
@@ -489,12 +485,12 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     /* CFU alignment classes - float-based positioning */
     .lesson-content .cfu-wrap-top-left {
       float: left;
-      margin: 0 16px 16px 0;
+      margin: 0 20px 16px 0;
     }
 
     .lesson-content .cfu-wrap-top-right {
       float: right;
-      margin: 0 0 16px 16px;
+      margin: 0 0 16px 20px;
     }
 
     .lesson-content .cfu-wrap-top-center {
@@ -503,12 +499,12 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     .lesson-content .cfu-left {
       float: left;
-      margin-right: 16px;
+      margin-right: 20px;
     }
 
     .lesson-content .cfu-right {
       float: right;
-      margin-left: 16px;
+      margin-left: 20px;
     }
 
     .lesson-content .cfu-center {
@@ -517,12 +513,12 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     .lesson-content .cfu-wrap-bottom-left {
       float: left;
-      margin: 16px 16px 0 0;
+      margin: 16px 20px 0 0;
     }
 
     .lesson-content .cfu-wrap-bottom-right {
       float: right;
-      margin: 16px 0 0 16px;
+      margin: 16px 0 0 20px;
       clear: left;
     }
 
