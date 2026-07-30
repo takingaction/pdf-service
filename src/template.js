@@ -209,7 +209,6 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     /* Page 2 */
     .page2-container {
-      padding: 0.5in;
     }
 
     /* Title Page */
