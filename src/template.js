@@ -305,7 +305,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     /* Lesson Outline - tighter bullet spacing */
     .left-column .lesson-content li {
-      margin-bottom: 1px;
+      margin-bottom: 0;
     }
 
     .right-column {
