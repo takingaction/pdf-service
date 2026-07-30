@@ -193,6 +193,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     body {
       font-family: Arial, Helvetica, sans-serif;
       font-size: 11pt;
+      line-height: 1.4;
       margin: 0;
       padding: 0;
     }
@@ -204,11 +205,6 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     .remaining-sections {
       padding: 0.5in;
-    }
-      line-height: 1.4;
-      color: #333;
-      margin: 0;
-      padding: 0;
     }
 
     /* Title Page */
