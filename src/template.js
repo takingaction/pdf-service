@@ -121,7 +121,7 @@ function buildPage2Html({ lesson }) {
 /**
  * Build remaining sections as full-width
  */
-function buildRemainingSectionsHtml({ lesson, appUrl }) {
+function buildRemainingSectionsHtml({ lesson, course, appUrl }) {
   const getImageUrl = (filename) => {
     return appUrl
       ? `${appUrl}/images/${filename}`
@@ -129,25 +129,37 @@ function buildRemainingSectionsHtml({ lesson, appUrl }) {
   };
 
   const lastPageImage = `<img src="${getImageUrl('last-page.png')}" class="page-break-image page-break-last" />`;
+  const logoEndUrl = appUrl
+    ? `${appUrl}/images/logo-end.jpg`
+    : `https://bh-curriculum-management.vercel.app/images/logo-end.jpg`;
+  const logoEndHtml = `<div class="logo-end-container"><img src="${logoEndUrl}" alt="" class="logo-end" /></div>`;
 
-  const sectionsHtml = REMAINING_SECTIONS
-    .map(section => {
-      let headerClass = '';
-      if (section.key === 'vapa_text_block' || section.key === 'ncas_text_block') {
-        headerClass = 'gray';
-      } else if (section.key === 'assessment') {
-        headerClass = 'assessment';
-      }
+  let sectionsHtml = '';
+  let hasAssessment = false;
 
-      let html = '';
-      if (section.key === 'assessment') {
-        html += `<div class="page-break-image-container page-break-top">${lastPageImage}</div>`;
-      }
+  REMAINING_SECTIONS.forEach(section => {
+    let headerClass = '';
+    if (section.key === 'vapa_text_block' || section.key === 'ncas_text_block') {
+      headerClass = 'gray';
+    } else if (section.key === 'assessment') {
+      headerClass = 'assessment';
+      hasAssessment = true;
+    }
 
-      html += buildSectionHtml(section, lesson[section.key], headerClass);
-      return html;
-    })
-    .join('');
+    let html = '';
+    if (section.key === 'assessment') {
+      html += `<div class="page-break-image-container page-break-top">${lastPageImage}</div>`;
+    }
+
+    html += buildSectionHtml(section, lesson[section.key], headerClass);
+
+    // Append logo-end directly after assessment content
+    if (section.key === 'assessment') {
+      html += logoEndHtml;
+    }
+
+    sectionsHtml += `<div class="section-wrapper">${html}</div>`;
+  });
 
   return `
     <div class="remaining-sections">
@@ -164,11 +176,7 @@ function buildRemainingSectionsHtml({ lesson, appUrl }) {
 function buildLessonPDFHtml({ lesson, course, appUrl }) {
   const titlePage = buildTitlePage({ lesson, course, appUrl });
   const page2Html = buildPage2Html({ lesson });
-  const remainingHtml = buildRemainingSectionsHtml({ lesson, appUrl });
-  const logoEndUrl = appUrl
-    ? `${appUrl}/images/logo-end.jpg`
-    : `https://bh-curriculum-management.vercel.app/images/logo-end.jpg`;
-  const logoEndHtml = `<div class="logo-end-container"><img src="${logoEndUrl}" alt="" class="logo-end" /></div>`;
+  const remainingHtml = buildRemainingSectionsHtml({ lesson, course, appUrl });
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -367,12 +375,14 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       margin-bottom: 0;
       break-before: page;
       page: assessment;
+      break-inside: avoid;
     }
 
     .assessment-section table {
       border: 2px solid #e37c64;
       table-layout: fixed;
       width: 100% !important;
+      break-inside: avoid;
     }
 
     /* Header row - coral bg with white text */
@@ -397,9 +407,8 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     /* Page break images - flush to page edges (override parent padding) */
     .page-break-image-container {
-      width: calc(100% + 0.5in + 0.5in);
-      margin-left: -0.5in;
-      margin-right: -0.5in;
+      width: 100%;
+      margin: 0;
       overflow: hidden;
       padding-bottom: 40px;
       box-sizing: border-box;
@@ -689,7 +698,6 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
   ${titlePage}
   ${page2Html}
   ${remainingHtml}
-  ${logoEndHtml}
 </body>
 </html>`;
 
