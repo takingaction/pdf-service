@@ -400,6 +400,10 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       margin-bottom: 40px;
     }
 
+    .page-break-image-container + .section {
+      margin-top: 0;
+    }
+
     .page-break-top {
       break-before: page;
     }
