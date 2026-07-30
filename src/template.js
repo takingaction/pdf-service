@@ -314,7 +314,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     }
 
     .lesson-title {
-      font-size: 24pt;
+      font-size: 30pt;
       font-weight: bold;
       color: #333;
     }
@@ -354,11 +354,6 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       font-weight: bold;
     }
 
-    /* Assessment section - start on new page */
-    .assessment-section {
-      break-before: page;
-    }
-
     /* Assessment table styling */
     .assessment-section table {
       border: 2px solid #e37c64;
@@ -389,9 +384,9 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     /* Page break images - flush to page edges */
     .page-break-image-container {
       width: calc(100% + 1in);
-      margin-left: -0.5in;
+      position: relative;
+      left: -0.5in;
       margin-bottom: 40px;
-      padding: 0;
     }
 
     .page-break-top {
