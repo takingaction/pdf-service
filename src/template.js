@@ -312,6 +312,11 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       font-weight: bold;
     }
 
+    /* Assessment section - page break */
+    .assessment-section {
+      break-before: page;
+    }
+
     /* Assessment table styling */
     .assessment-section table {
       border: 2px solid #e37c64;
@@ -319,17 +324,21 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       width: 100% !important;
     }
 
-    .assessment-section table th {
+    /* Header row - coral bg with white text */
+    .assessment-section table thead th,
+    .assessment-section table tr:first-child td {
       background-color: #e37c64 !important;
       color: white !important;
       font-weight: bold;
     }
 
-    .assessment-section table td {
-      border: 1px solid #e37c64;
+    /* Equal borders for all cells - 2px to match outer border */
+    .assessment-section table td,
+    .assessment-section table th {
+      border: 2px solid #e37c64 !important;
     }
 
-    /* Equal column widths - 4 columns = 25% each */
+    /* Equal column widths */
     .assessment-section table th,
     .assessment-section table td {
       width: 25%;
