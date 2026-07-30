@@ -361,9 +361,10 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       width: 25%;
     }
 
-    /* Page break images - like hero image, flush to edges */
+    /* Page break images - extend into margins for flush edges */
     .page-break-image-container {
-      width: 100%;
+      width: calc(100% + 1in);
+      margin-left: -0.5in;
       overflow: hidden;
       margin-bottom: 20px;
       break-before: page;
