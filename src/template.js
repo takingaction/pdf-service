@@ -178,9 +178,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
   <style>
     @page {
       size: letter;
-      margin: 0.5in;
-      margin-top: 0.4in;
-      margin-bottom: 0.6in;
+      margin: 0;
     }
 
     @page :first {
@@ -195,6 +193,18 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     body {
       font-family: Arial, Helvetica, sans-serif;
       font-size: 11pt;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Content containers with fake margins */
+    .page2-container {
+      padding: 0.5in;
+    }
+
+    .remaining-sections {
+      padding: 0.5in;
+    }
       line-height: 1.4;
       color: #333;
       margin: 0;
@@ -383,9 +393,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     /* Page break images - flush to page edges */
     .page-break-image-container {
-      width: 8.5in;
-      margin-left: -0.5in;
-      margin-right: -0.5in;
+      width: 100%;
       margin-bottom: 40px;
     }
 
