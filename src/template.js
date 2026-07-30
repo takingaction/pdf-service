@@ -673,8 +673,8 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     /* Logo end - centered below assessment table */
     .logo-end-container {
       text-align: center;
-      padding-top: 40px;
-      padding-bottom: 40px;
+      padding-top: 20px;
+      padding-bottom: 20px;
     }
 
     .logo-end {
