@@ -144,7 +144,7 @@ function buildRemainingSectionsHtml({ lesson, appUrl }) {
       if (section.key === 'welcome_opening') {
         html += `<div class="page-break-image-container page-break-top">${page3Image}</div>`;
       } else if (section.key === 'assessment') {
-        html += `<div class="page-break-image-container">${lastPageImage}</div>`;
+        html += `<div class="page-break-image-container page-break-top">${lastPageImage}</div>`;
       }
 
       html += buildSectionHtml(section, lesson[section.key], headerClass);
@@ -383,9 +383,9 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     /* Page break images - flush to page edges */
     .page-break-image-container {
-      width: calc(100% + 1in);
-      position: relative;
-      left: -0.5in;
+      width: 8.5in;
+      margin-left: -0.5in;
+      margin-right: -0.5in;
       margin-bottom: 40px;
     }
 
