@@ -401,6 +401,10 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       box-sizing: border-box;
     }
 
+    .page-break-image-container + .section {
+      padding-top: 0 !important;
+    }
+
     .page-break-top {
       break-before: page;
     }
