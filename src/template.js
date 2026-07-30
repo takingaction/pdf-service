@@ -369,6 +369,10 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
     }
 
     /* Assessment table styling */
+    .assessment-section {
+      margin-bottom: 0;
+    }
+
     .assessment-section table {
       border: 2px solid #e37c64;
       table-layout: fixed;
