@@ -130,8 +130,8 @@ function buildRemainingSectionsHtml({ lesson, course, appUrl }) {
 
   const lastPageImage = `<img src="${getImageUrl('last-page.png')}" class="page-break-image page-break-last" />`;
   const logoEndUrl = appUrl
-    ? `${appUrl}/images/logo-end.jpg`
-    : `https://bh-curriculum-management.vercel.app/images/logo-end.jpg`;
+    ? `${appUrl}/images/logo-end.png`
+    : `https://bh-curriculum-management.vercel.app/images/logo-end.png`;
   const logoEndHtml = `<div class="logo-end-container"><img src="${logoEndUrl}" alt="" class="logo-end" /></div>`;
 
   let sectionsHtml = '';
