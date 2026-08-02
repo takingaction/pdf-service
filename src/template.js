@@ -336,7 +336,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
 
     /* Section Styling */
     .section {
-      margin-bottom: 16px;
+      margin-bottom: 0;
       break-inside: avoid;
       break-after: auto;
     }
@@ -349,6 +349,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl }) {
       text-transform: uppercase;
       padding: 8px 12px;
       margin-bottom: 8px;
+      margin-top: 16px;
       clear: both;
     }
 
