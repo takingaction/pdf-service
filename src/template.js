@@ -80,9 +80,16 @@ function buildTitlePage({ lesson, course, appUrl }) {
 /**
  * Build page 2 with 2-column layout
  */
-function buildPage2Html({ lesson }) {
+function buildPage2Html({ lesson, isVersionPdf }) {
+  console.log('buildPage2Html - isVersionPdf:', isVersionPdf);
+  console.log('buildPage2Html - lesson.title:', lesson?.title);
+  console.log('buildPage2Html - lesson.originalTitle:', lesson?.originalTitle);
+  console.log('buildPage2Html - lesson.versionName:', lesson?.versionName);
+
   const lessonNumber = lesson.lesson_number || '?';
   const lessonTitle = lesson.title || '';
+  const originalTitle = lesson.originalTitle || lessonTitle;
+  const versionName = lesson.versionName || '';
 
   const leftContent = PAGE_2_LEFT_SECTIONS
     .map(key => {
@@ -100,11 +107,19 @@ function buildPage2Html({ lesson }) {
     .filter(Boolean)
     .join('');
 
+  const planLabel = isVersionPdf && versionName
+    ? `LESSON PLAN: CLASS ${lessonNumber} - (Version: ${escapeHtml(versionName)})`
+    : `LESSON PLAN: CLASS ${lessonNumber}`;
+
+  const displayTitle = isVersionPdf && originalTitle
+    ? originalTitle
+    : lessonTitle;
+
   return `
     <div class="page2-container">
       <div class="page2-header">
-        <div class="lesson-plan-label">LESSON PLAN: CLASS ${lessonNumber}</div>
-        <div class="lesson-title">&#8220;${escapeHtml(lessonTitle)}&#8221;</div>
+        <div class="lesson-plan-label">${planLabel}</div>
+        <div class="lesson-title">&#8220;${escapeHtml(displayTitle)}&#8221;</div>
       </div>
       <div class="two-column">
         <div class="left-column">
@@ -170,12 +185,12 @@ function buildRemainingSectionsHtml({ lesson, course, appUrl }) {
 
 /**
  * Build complete HTML document for a lesson
- * @param {Object} data - { lesson, course }
+ * @param {Object} data - { lesson, course, appUrl, isVersionPdf }
  * @returns {string} Complete HTML document
  */
-function buildLessonPDFHtml({ lesson, course, appUrl }) {
+function buildLessonPDFHtml({ lesson, course, appUrl, isVersionPdf }) {
   const titlePage = buildTitlePage({ lesson, course, appUrl });
-  const page2Html = buildPage2Html({ lesson });
+  const page2Html = buildPage2Html({ lesson, isVersionPdf });
   const remainingHtml = buildRemainingSectionsHtml({ lesson, course, appUrl });
 
   const html = `<!DOCTYPE html>

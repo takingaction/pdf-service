@@ -162,7 +162,12 @@ app.post('/pdf', async (req, res) => {
  * Returns: application/pdf
  */
 app.post('/lesson-pdf', async (req, res) => {
-  const { lesson, course, filename } = req.body;
+  const { lesson, course, filename, isVersionPdf } = req.body;
+
+  console.log('isVersionPdf:', isVersionPdf);
+  console.log('lesson.title:', lesson?.title);
+  console.log('lesson.originalTitle:', lesson?.originalTitle);
+  console.log('lesson.versionName:', lesson?.versionName);
 
   if (!lesson) {
     return res.status(400).json({ error: 'lesson object is required' });
@@ -170,7 +175,7 @@ app.post('/lesson-pdf', async (req, res) => {
 
   try {
     const appUrl = process.env.APP_URL || 'https://bh-curriculum-management.vercel.app';
-    const html = buildLessonPDFHtml({ lesson, course, appUrl });
+    const html = buildLessonPDFHtml({ lesson, course, appUrl, isVersionPdf });
 
     console.log(`HTML input size: ${html.length} bytes (${(html.length / 1024 / 1024).toFixed(2)} MB)`);
 
