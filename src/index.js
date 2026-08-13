@@ -55,7 +55,7 @@ function buildCourseFooterHtml(course) {
   const year = new Date().getFullYear();
 
   return `
-    <div style="width: 100%; font-family: Arial, Helvetica, sans-serif; padding: 0 0.4in; color: #333;">
+    <div style="width: 100%; font-family: Arial, Helvetica, sans-serif; padding: 0.3in 0.4in; color: #333;">
       <div style="font-size: 9pt;">
         ${disciplineLabel} | GRADE ${grade} | SCOPE AND SEQUENCE
       </div>
