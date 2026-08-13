@@ -882,7 +882,7 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
     }
 
     .lesson-entry {
-      margin-bottom: 24px;
+      margin-bottom: 40px;
       break-inside: avoid;
       padding-left: 0;
     }
