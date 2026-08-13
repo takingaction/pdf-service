@@ -814,7 +814,7 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
   <style>
     @page {
       size: letter;
-      margin: 0.4in;
+      margin: 0.4in 0.4in 0.7in 0.4in;
     }
 
     * {
