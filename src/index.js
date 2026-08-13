@@ -51,12 +51,13 @@ function buildFooterHtml(course, lesson) {
 function buildCourseFooterHtml(course) {
   const discipline = course?.discipline || 'COURSE';
   const disciplineLabel = discipline.toUpperCase() === 'DANCE' ? 'DANCE AND CULTURE' : discipline.toUpperCase();
+  const grade = course?.grade || 'N/A';
   const year = new Date().getFullYear();
 
   return `
     <div style="width: 100%; font-family: Arial, Helvetica, sans-serif; padding: 0 0.5in; color: #333;">
       <div style="display: flex; justify-content: space-between; font-size: 9pt;">
-        <div>${disciplineLabel}</div>
+        <div>${disciplineLabel} | GRADE ${grade} | SCOPE AND SEQUENCE</div>
       </div>
       <div style="font-size: 7pt; margin-top: 2pt;">
         &copy; ${year} Better Humans, LLC

@@ -720,13 +720,21 @@ function buildLessonPDFHtml({ lesson, course, appUrl, isVersionPdf }) {
  */
 function extractContentSection(html) {
   if (!html) return '';
-  const contentMatch = html.match(/<strong[^>]*>Content:<\/strong>\s*([^<]*(?:<(?!\/p>)[^<]*)*)/i);
-  if (contentMatch) {
-    let text = contentMatch[1].trim();
-    text = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    return text;
-  }
-  return '';
+
+  // Find Content: section - match <strong>Content:</strong> followed by text until </p>
+  const strongMatch = html.match(/<strong[^>]*>Content:<\/strong>/i);
+  if (!strongMatch) return '';
+
+  // Get everything after the strong tag until </p>
+  const startIdx = strongMatch.index + strongMatch[0].length;
+  const untilEndP = html.indexOf('</p>', startIdx);
+  if (untilEndP === -1) return '';
+
+  let text = html.slice(startIdx, untilEndP).trim();
+  // Strip any remaining HTML tags
+  text = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+  return text;
 }
 
 /**
@@ -748,7 +756,7 @@ function buildCourseTitlePage({ course, appUrl }) {
         <div class="scope-title">SCOPE AND SEQUENCE</div>
       </div>
       <div class="course-title-bar">
-        <h1 class="course-title-text">${courseTitle}</h1>
+        <h1 class="course-title-text">${courseTitle} | GRADE ${grade}</h1>
       </div>
       ${summary ? `<div class="course-summary">${summary}</div>` : ''}
     </div>
@@ -784,6 +792,15 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
   const titlePage = buildCourseTitlePage({ course, appUrl });
   const lessonEntries = buildLessonEntriesHtml({ lessons });
 
+  const getImageUrl = (filename) => {
+    return appUrl
+      ? `${appUrl}/images/${filename}`
+      : `https://bh-curriculum-management.vercel.app/images/${filename}`;
+  };
+
+  const logoEndUrl = getImageUrl('logo-end.png');
+  const logoEndHtml = `<div class="logo-end-container"><img src="${logoEndUrl}" alt="" class="logo-end" /></div>`;
+
   const discipline = course?.discipline || 'COURSE';
   const disciplineLabel = discipline.toUpperCase() === 'DANCE' ? 'DANCE AND CULTURE' : discipline.toUpperCase();
   const year = new Date().getFullYear();
@@ -815,14 +832,14 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
 
     /* Course Title Page */
     .course-title-page {
-      page-break-after: always;
+      padding-bottom: 0.5in;
     }
 
     .course-header {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      padding: 0.5in 0.5in 0.3in;
+      padding: 0.5in 0.5in 0.4in;
     }
 
     .logo-container {
@@ -845,7 +862,7 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
 
     .course-title-bar {
       background-color: #e37c64;
-      padding: 0.3in 0.5in;
+      padding: 0.4in 0.5in;
     }
 
     .course-title-text {
@@ -896,6 +913,19 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
     .footer {
       display: none;
     }
+
+    /* Logo end - centered below content */
+    .logo-end-container {
+      text-align: center;
+      padding-top: 30px;
+      padding-bottom: 20px;
+      margin-top: 40px;
+    }
+
+    .logo-end {
+      width: 35%;
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
@@ -903,6 +933,7 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
   <div class="lessons-container">
     ${lessonEntries}
   </div>
+  ${logoEndHtml}
 </body>
 </html>`;
 
