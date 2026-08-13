@@ -938,8 +938,153 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
   return html;
 }
 
+/**
+ * Build complete HTML document for a Discipline Scope and Sequence PDF
+ */
+function buildDisciplinePDFHtml({ courses, discipline, appUrl }) {
+  const disciplineTitle = (discipline || 'COURSE').toUpperCase();
+  const disciplineLabel = disciplineTitle === 'DANCE' ? 'DANCE AND CULTURE' : disciplineTitle;
+  const logoUrl = appUrl ? `${appUrl}/images/performers-ready.png` : 'https://bh-curriculum-management.vercel.app/images/performers-ready.png';
+
+  const courseEntries = courses.map(course => {
+    const courseTitle = escapeHtml(course.title || 'Untitled Course');
+    const summary = course.summary || '';
+
+    return `
+      <div class="course-entry">
+        <div class="course-entry-title">${courseTitle}</div>
+        ${summary ? `<div class="course-entry-summary">${escapeHtml(summary)}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${disciplineLabel} - Scope and Sequence</title>
+  <style>
+    @page {
+      size: letter;
+      margin: 0.4in 0.4in 0.7in 0.4in;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11pt;
+      line-height: 1.4;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    /* Discipline Title Page */
+    .discipline-title-page {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .discipline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 0.4in 0 0.15in;
+    }
+
+    .logo-container {
+      text-align: left;
+    }
+
+    .logo {
+      height: 120px;
+      width: auto;
+    }
+
+    .scope-title {
+      font-size: 18pt;
+      font-weight: bold;
+      color: white;
+      background-color: #e37c64;
+      padding: 15px 20px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .discipline-title-bar {
+      background-color: #e37c64;
+      padding: 20px 0.3in;
+    }
+
+    .discipline-title-text {
+      font-size: 28pt;
+      font-weight: bold;
+      color: white;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Course Entries */
+    .courses-container {
+      flex: 1;
+      padding: 0.2in 0;
+      overflow: hidden;
+    }
+
+    .course-entry {
+      margin-bottom: 16px;
+      break-inside: avoid;
+    }
+
+    .course-entry-title {
+      font-size: 13pt;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .course-entry-summary {
+      font-size: 11pt;
+      line-height: 1.4;
+      color: #555;
+    }
+
+    /* Footer handling via Puppeteer */
+    .footer {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="discipline-title-page">
+    <div class="discipline-header">
+      <div class="logo-container">
+        <img src="${logoUrl}" alt="Performers Ready!" class="logo" />
+      </div>
+      <div class="scope-title">SCOPE & SEQUENCE</div>
+    </div>
+    <div class="discipline-title-bar">
+      <h1 class="discipline-title-text">${disciplineLabel}</h1>
+    </div>
+    <div class="courses-container">
+      ${courseEntries}
+    </div>
+  </div>
+</body>
+</html>`;
+
+  return html;
+}
+
 module.exports = {
   buildLessonPDFHtml,
   buildCoursePDFHtml,
+  buildDisciplinePDFHtml,
   SECTIONS
 };

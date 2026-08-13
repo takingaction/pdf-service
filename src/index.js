@@ -6,7 +6,7 @@
 const express = require('express');
 const puppeteer = require('puppeteer-core');
 const chromium = require('@sparticuz/chromium');
-const { buildLessonPDFHtml, buildCoursePDFHtml } = require('./template');
+const { buildLessonPDFHtml, buildCoursePDFHtml, buildDisciplinePDFHtml } = require('./template');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -58,6 +58,26 @@ function buildCourseFooterHtml(course) {
     <div style="width: 100%; font-family: Arial, Helvetica, sans-serif; padding: 0 0.4in; color: #333;">
       <div style="font-size: 9pt;">
         ${disciplineLabel} | GRADE ${grade} | SCOPE AND SEQUENCE
+      </div>
+      <div style="font-size: 7pt; margin-top: 2pt;">
+        &copy; ${year} Better Humans, LLC
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Build footer HTML for Discipline Scope and Sequence PDF
+ */
+function buildDisciplineFooterHtml(discipline) {
+  const disciplineTitle = (discipline || 'COURSE').toUpperCase();
+  const disciplineLabel = disciplineTitle === 'DANCE' ? 'DANCE AND CULTURE' : disciplineTitle;
+  const year = new Date().getFullYear();
+
+  return `
+    <div style="width: 100%; font-family: Arial, Helvetica, sans-serif; padding: 0 0.4in; color: #333;">
+      <div style="font-size: 9pt;">
+        ${disciplineLabel} | GRADES TK-6 | SCOPE + SEQUENCE
       </div>
       <div style="font-size: 7pt; margin-top: 2pt;">
         &copy; ${year} Better Humans, LLC
@@ -293,11 +313,55 @@ app.post('/course-pdf', async (req, res) => {
   }
 });
 
+/**
+ * Discipline Scope and Sequence PDF endpoint
+ * POST /discipline-pdf
+ * Body: { courses: array, discipline: string, filename?: string }
+ * Returns: application/pdf
+ */
+app.post('/discipline-pdf', async (req, res) => {
+  const { courses, discipline, filename } = req.body;
+
+  if (!courses || !discipline) {
+    return res.status(400).json({ error: 'courses array and discipline are required' });
+  }
+
+  try {
+    const appUrl = process.env.APP_URL || 'https://bh-curriculum-management.vercel.app';
+    const html = buildDisciplinePDFHtml({ courses, discipline, appUrl });
+
+    console.log(`Discipline PDF HTML input size: ${html.length} bytes (${(html.length / 1024 / 1024).toFixed(2)} MB)`);
+
+    const safeFilename = filename || `${discipline.toLowerCase()}-scope-and-sequence.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
+
+    const footerHtml = buildDisciplineFooterHtml(discipline);
+
+    const { pdf } = await generatePDF(html, safeFilename, {
+      footerHtml,
+      displayHeaderFooter: true
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+    res.setHeader('Content-Length', pdf.length);
+    res.send(pdf);
+
+  } catch (error) {
+    console.error('Discipline PDF error:', error);
+    res.status(500).json({
+      error: 'Failed to generate discipline PDF',
+      message: error.message
+    });
+  }
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`PDF service running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
   console.log(`PDF endpoint: POST http://localhost:${PORT}/pdf`);
   console.log(`Lesson PDF: POST http://localhost:${PORT}/lesson-pdf`);
+  console.log(`Course PDF: POST http://localhost:${PORT}/course-pdf`);
+  console.log(`Discipline PDF: POST http://localhost:${PORT}/discipline-pdf`);
   console.log(`Debug HTML: POST http://localhost:${PORT}/debug-html`);
 });
