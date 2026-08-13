@@ -715,7 +715,202 @@ function buildLessonPDFHtml({ lesson, course, appUrl, isVersionPdf }) {
   return html;
 }
 
+/**
+ * Extracts the text content after <strong>Content:</strong> in the learning_objectives HTML
+ */
+function extractContentSection(html) {
+  if (!html) return '';
+  const contentMatch = html.match(/<strong[^>]*>Content:<\/strong>\s*([^<]*(?:<(?!\/p>)[^<]*)*)/i);
+  if (contentMatch) {
+    let text = contentMatch[1].trim();
+    text = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    return text;
+  }
+  return '';
+}
+
+/**
+ * Build the title page for Course Scope and Sequence PDF
+ */
+function buildCourseTitlePage({ course, appUrl }) {
+  const courseTitle = escapeHtml(course?.title || 'Unknown Course');
+  const grade = course?.grade || 'N/A';
+  const discipline = course?.discipline || 'N/A';
+  const summary = course?.summary || '';
+  const logoUrl = appUrl ? `${appUrl}/images/performers-ready.png` : 'https://bh-curriculum-management.vercel.app/images/performers-ready.png';
+
+  return `
+    <div class="course-title-page">
+      <div class="course-header">
+        <div class="logo-container">
+          <img src="${logoUrl}" alt="Performers Ready!" class="logo" />
+        </div>
+        <div class="scope-title">SCOPE AND SEQUENCE</div>
+      </div>
+      <div class="course-title-bar">
+        <h1 class="course-title-text">${courseTitle}</h1>
+      </div>
+      ${summary ? `<div class="course-summary">${summary}</div>` : ''}
+    </div>
+  `;
+}
+
+/**
+ * Build lesson entries for Course PDF
+ */
+function buildLessonEntriesHtml({ lessons }) {
+  if (!lessons || lessons.length === 0) return '';
+
+  return lessons.map(lesson => {
+    const lessonNum = lesson.lesson_number || '?';
+    const lessonTitle = escapeHtml(lesson.title || 'Untitled');
+    const contentText = extractContentSection(lesson.learning_objectives);
+
+    return `
+      <div class="lesson-entry">
+        <div class="lesson-entry-title">
+          <span class="lesson-number">CLASS ${lessonNum}:</span> ${lessonTitle}
+        </div>
+        ${contentText ? `<div class="lesson-entry-content">${escapeHtml(contentText)}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+/**
+ * Build complete HTML document for a course Scope and Sequence PDF
+ */
+function buildCoursePDFHtml({ course, lessons, appUrl }) {
+  const titlePage = buildCourseTitlePage({ course, appUrl });
+  const lessonEntries = buildLessonEntriesHtml({ lessons });
+
+  const discipline = course?.discipline || 'COURSE';
+  const disciplineLabel = discipline.toUpperCase() === 'DANCE' ? 'DANCE AND CULTURE' : discipline.toUpperCase();
+  const year = new Date().getFullYear();
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(course?.title || 'Course')} - Scope and Sequence</title>
+  <style>
+    @page {
+      size: letter;
+      margin: 0.5in;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11pt;
+      line-height: 1.4;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    /* Course Title Page */
+    .course-title-page {
+      page-break-after: always;
+    }
+
+    .course-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 0.5in 0.5in 0.3in;
+    }
+
+    .logo-container {
+      text-align: left;
+    }
+
+    .logo {
+      height: 144px;
+      width: auto;
+    }
+
+    .scope-title {
+      font-size: 30pt;
+      font-weight: bold;
+      color: #333;
+      text-align: right;
+      vertical-align: bottom;
+      padding-top: 60px;
+    }
+
+    .course-title-bar {
+      background-color: #e37c64;
+      padding: 0.3in 0.5in;
+    }
+
+    .course-title-text {
+      font-size: 24pt;
+      font-weight: bold;
+      color: white;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .course-summary {
+      padding: 0.3in 0.5in;
+      font-size: 12pt;
+      line-height: 1.5;
+      background-color: #f9f9f9;
+    }
+
+    /* Lesson Entries */
+    .lessons-container {
+      padding-top: 0.3in;
+    }
+
+    .lesson-entry {
+      margin-bottom: 24px;
+      break-inside: avoid;
+    }
+
+    .lesson-entry-title {
+      font-size: 14pt;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 6px;
+    }
+
+    .lesson-number {
+      color: #e37c64;
+    }
+
+    .lesson-entry-content {
+      font-size: 11pt;
+      line-height: 1.5;
+      padding-left: 0.2in;
+      color: #444;
+    }
+
+    /* Footer handling via Puppeteer */
+    .footer {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  ${titlePage}
+  <div class="lessons-container">
+    ${lessonEntries}
+  </div>
+</body>
+</html>`;
+
+  return html;
+}
+
 module.exports = {
   buildLessonPDFHtml,
+  buildCoursePDFHtml,
   SECTIONS
 };
