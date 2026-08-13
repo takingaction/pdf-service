@@ -832,7 +832,7 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
 
     /* Course Title Page */
     .course-title-page {
-      padding-bottom: 0.4in;
+      padding-bottom: 0;
     }
 
     .course-header {
