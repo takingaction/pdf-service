@@ -55,9 +55,9 @@ function buildCourseFooterHtml(course) {
   const year = new Date().getFullYear();
 
   return `
-    <div style="width: 100%; font-family: Arial, Helvetica, sans-serif; padding: 0 0.5in; color: #333;">
-      <div style="display: flex; justify-content: space-between; font-size: 9pt;">
-        <div>${disciplineLabel} | GRADE ${grade} | SCOPE AND SEQUENCE</div>
+    <div style="width: 100%; font-family: Arial, Helvetica, sans-serif; padding: 0 0.4in; color: #333;">
+      <div style="font-size: 9pt;">
+        ${disciplineLabel} | GRADE ${grade} | SCOPE AND SEQUENCE
       </div>
       <div style="font-size: 7pt; margin-top: 2pt;">
         &copy; ${year} Better Humans, LLC
