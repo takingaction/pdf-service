@@ -878,12 +878,12 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
 
     /* Lesson Entries */
     .lessons-container {
-      padding-top: 30px;
+      padding-top: 15px;
       padding-bottom: 60px;
     }
 
     .lesson-entry {
-      margin-bottom: 24px;
+      margin-bottom: 20px;
       break-inside: avoid;
       padding-left: 0;
     }
