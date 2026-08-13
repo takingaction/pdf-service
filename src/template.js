@@ -721,8 +721,8 @@ function buildLessonPDFHtml({ lesson, course, appUrl, isVersionPdf }) {
 function extractContentSection(html) {
   if (!html) return '';
 
-  // Find Content: section - match <strong>Content:</strong> followed by text until </p>
-  const strongMatch = html.match(/<strong[^>]*>Content:<\/strong>/i);
+  // Find Content: section - match <strong>Content: </strong> (with optional space before closing tag)
+  const strongMatch = html.match(/<strong[^>]*>Content:\s*<\/strong>/i);
   if (!strongMatch) return '';
 
   // Get everything after the strong tag until </p>
@@ -836,10 +836,7 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
     }
 
     .course-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      padding: 0.5in 0.5in 0.4in;
+      padding: 0.5in 0.5in 0.2in;
     }
 
     .logo-container {
@@ -856,8 +853,7 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
       font-weight: bold;
       color: #333;
       text-align: right;
-      vertical-align: bottom;
-      padding-top: 60px;
+      padding-top: 10px;
     }
 
     .course-title-bar {
