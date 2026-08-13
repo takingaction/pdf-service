@@ -202,7 +202,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl, isVersionPdf }) {
   <style>
     @page {
       size: letter;
-      margin: 0.5in;
+      margin: 0.25in 0.4in 0.7in 0.4in;
     }
 
     @page :first {
@@ -1018,7 +1018,7 @@ function buildDisciplinePDFHtml({ courses, discipline, appUrl }) {
 
     .discipline-title-bar {
       background-color: #e37c64;
-      padding: 20px 0.3in;
+      padding: 15px 0.3in;
     }
 
     .discipline-title-text {
@@ -1033,24 +1033,24 @@ function buildDisciplinePDFHtml({ courses, discipline, appUrl }) {
     /* Course Entries */
     .courses-container {
       flex: 1;
-      padding: 0.2in 0;
+      padding: 0.15in 0;
       overflow: hidden;
     }
 
     .course-entry {
-      margin-bottom: 16px;
+      margin-bottom: 12px;
       break-inside: avoid;
     }
 
     .course-entry-title {
-      font-size: 13pt;
+      font-size: 11pt;
       font-weight: bold;
       color: #333;
       margin-bottom: 4px;
     }
 
     .course-entry-summary {
-      font-size: 11pt;
+      font-size: 10pt;
       line-height: 1.4;
       color: #555;
     }
