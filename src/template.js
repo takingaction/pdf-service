@@ -814,7 +814,7 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
   <style>
     @page {
       size: letter;
-      margin: 0.5in;
+      margin: 0.4in;
     }
 
     * {
@@ -832,11 +832,11 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
 
     /* Course Title Page */
     .course-title-page {
-      padding-bottom: 0.5in;
+      padding-bottom: 0.4in;
     }
 
     .course-header {
-      padding: 0.5in 0;
+      padding: 0.4in 0 0.15in;
     }
 
     .logo-container {
@@ -858,7 +858,7 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
 
     .course-title-bar {
       background-color: #e37c64;
-      padding: 0.4in 0;
+      padding: 20px 0.3in;
     }
 
     .course-title-text {
@@ -871,15 +871,14 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
     }
 
     .course-summary {
-      padding: 0.3in 0;
+      padding: 0.15in 0;
       font-size: 12pt;
       line-height: 1.5;
-      background-color: #f9f9f9;
     }
 
     /* Lesson Entries */
     .lessons-container {
-      padding-top: 0.15in;
+      padding-top: 30px;
     }
 
     .lesson-entry {
