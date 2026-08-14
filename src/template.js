@@ -1106,14 +1106,14 @@ function buildDisciplinePDFHtml({ courses, discipline, appUrl }) {
     }
 
     .course-entry-title {
-      font-size: 11pt;
+      font-size: 13pt;
       font-weight: bold;
       color: #333;
       margin-bottom: 4px;
     }
 
     .course-entry-summary {
-      font-size: 10pt;
+      font-size: 11pt;
       line-height: 1.4;
       color: #555;
     }
