@@ -215,7 +215,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl, isVersionPdf }) {
     }
 
     body {
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: "Noto Sans CJK SC", "Noto Sans CJK JP", "Noto Sans CJK KR", Arial, Helvetica, sans-serif;
       font-size: 11pt;
       line-height: 1.4;
       margin: 0;
@@ -822,7 +822,7 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
     }
 
     body {
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: "Noto Sans CJK SC", "Noto Sans CJK JP", "Noto Sans CJK KR", Arial, Helvetica, sans-serif;
       font-size: 11pt;
       line-height: 1.4;
       margin: 0;
@@ -1038,7 +1038,7 @@ function buildDisciplinePDFHtml({ courses, discipline, appUrl }) {
     }
 
     body {
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: "Noto Sans CJK SC", "Noto Sans CJK JP", "Noto Sans CJK KR", Arial, Helvetica, sans-serif;
       font-size: 11pt;
       line-height: 1.4;
       margin: 0;

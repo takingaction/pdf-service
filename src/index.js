@@ -18,17 +18,65 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // In-memory queue for PDF generation (prevents RAM exhaustion on single-instance Render)
 let isGenerating = false;
 const requestQueue = [];
-const pendingResults = new Map(); // lessonId -> { status: 'queued'|'processing'|'completed'|'failed', position?, pdf?, filename?, error? }
+const pendingResults = new Map(); // lessonId -> { status: 'queued'|'processing'|'completed'|'failed', position?, pdf?, filename?, error?, timestamp? }
+
+/**
+ * Clean up stale pending results (older than 10 minutes)
+ * Called periodically and on each status check
+ */
+function cleanupStaleResults() {
+  const staleThreshold = 10 * 60 * 1000; // 10 minutes
+  const now = Date.now();
+  let cleaned = 0;
+  let totalEntries = 0;
+  for (const [lessonId, result] of pendingResults) {
+    totalEntries++;
+    const age = result.timestamp ? now - result.timestamp : null;
+    const isStale = !result.timestamp || (age > staleThreshold);
+    if (isStale) {
+      console.log(`[Queue] Cleaning stale: ${lessonId.substring(0, 8)}... status=${result.status} age=${age ? Math.round(age/1000) : 'no-ts'}s`);
+      pendingResults.delete(lessonId);
+      cleaned++;
+    }
+  }
+  if (cleaned > 0 || totalEntries > 0) {
+    console.log(`[Queue] Cleanup: ${cleaned}/${totalEntries} entries cleaned, ${pendingResults.size} remaining`);
+  }
+  return cleaned;
+}
+
+// Run cleanup every 2 minutes with error handling
+setInterval(() => {
+  try {
+    cleanupStaleResults();
+  } catch (e) {
+    console.error('[Queue] Cleanup interval error:', e);
+  }
+}, 2 * 60 * 1000);
 
 /**
  * Health check endpoint
  */
 app.get('/health', (req, res) => {
+  cleanupStaleResults();
+  const now = Date.now();
+  const pendingDetails = [];
+  for (const [lessonId, result] of pendingResults) {
+    const age = result.timestamp ? Math.round((now - result.timestamp) / 1000) : null;
+    pendingDetails.push({
+      lessonId: lessonId.substring(0, 8) + '...',
+      status: result.status,
+      age_seconds: age,
+      position: result.position
+    });
+  }
   res.json({
     status: 'ok',
     service: 'pdf-service',
     queue_length: requestQueue.length,
-    is_generating: isGenerating
+    is_generating: isGenerating,
+    pending_results: pendingResults.size,
+    pending_details: pendingDetails
   });
 });
 
@@ -40,6 +88,9 @@ app.get('/lesson-pdf-status', (req, res) => {
   if (!lessonId) {
     return res.status(400).json({ error: 'lessonId query param required' });
   }
+
+  // Clean up stale entries on each status check
+  cleanupStaleResults();
 
   // Check if we have a result stored
   const result = pendingResults.get(lessonId);
@@ -131,7 +182,8 @@ async function processQueue() {
     pendingResults.set(lessonId, {
       status: 'completed',
       pdf,
-      filename: safeFilename
+      filename: safeFilename,
+      timestamp: Date.now()
     });
 
   } catch (error) {
@@ -140,7 +192,8 @@ async function processQueue() {
     // Store failed result
     pendingResults.set(lessonId, {
       status: 'failed',
-      error: error.message
+      error: error.message,
+      timestamp: Date.now()
     });
   } finally {
     isGenerating = false;
@@ -361,7 +414,8 @@ app.post('/lesson-pdf', async (req, res) => {
     pendingResults.set(requestId, {
       status: 'queued',
       position,
-      queue_length: requestQueue.length - 1
+      queue_length: requestQueue.length - 1,
+      timestamp: Date.now()
     });
 
     return res.status(202).json({
@@ -378,7 +432,8 @@ app.post('/lesson-pdf', async (req, res) => {
   pendingResults.set(requestId, {
     status: 'processing',
     position: 0,
-    queue_length: 0
+    queue_length: 0,
+    timestamp: Date.now()
   });
 
   // Add to queue (so processQueue can process it)
