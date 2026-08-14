@@ -946,13 +946,76 @@ function buildDisciplinePDFHtml({ courses, discipline, appUrl }) {
   const disciplineLabel = disciplineTitle === 'DANCE' ? 'DANCE AND CULTURE' : disciplineTitle;
   const logoUrl = appUrl ? `${appUrl}/images/performers-ready.png` : 'https://bh-curriculum-management.vercel.app/images/performers-ready.png';
 
-  const courseEntries = courses.map(course => {
-    const courseTitle = escapeHtml(course.title || 'Untitled Course');
-    const summary = course.summary || '';
+  // Consolidate grades: PK+K -> TK/K, 1+2 -> GRADES 1-2, others individual
+  const consolidatedCourses = [];
+  let i = 0;
+  while (i < courses.length) {
+    const course = courses[i];
+    const grade = course.grade;
+
+    if (grade === 'PK') {
+      // Check if next is K
+      const next = courses[i + 1];
+      if (next && next.grade === 'K') {
+        // Combine PK + K as TK/K, use PK's title/summary
+        consolidatedCourses.push({
+          gradeLabel: 'TK/K',
+          title: course.title,
+          summary: course.summary
+        });
+        i += 2; // Skip both PK and K
+      } else {
+        consolidatedCourses.push({
+          gradeLabel: 'TK/K',
+          title: course.title,
+          summary: course.summary
+        });
+        i++;
+      }
+    } else if (grade === 'K') {
+      // Skip - already handled by PK
+      i++;
+    } else if (grade === '1') {
+      // Check if next is 2
+      const next = courses[i + 1];
+      if (next && next.grade === '2') {
+        // Combine 1 + 2 as GRADES 1-2, use grade 1's title/summary
+        consolidatedCourses.push({
+          gradeLabel: 'GRADES 1-2',
+          title: course.title,
+          summary: course.summary
+        });
+        i += 2; // Skip both 1 and 2
+      } else {
+        consolidatedCourses.push({
+          gradeLabel: 'GRADE 1',
+          title: course.title,
+          summary: course.summary
+        });
+        i++;
+      }
+    } else if (grade === '2') {
+      // Skip - already handled by 1
+      i++;
+    } else {
+      // Grades 3-6
+      consolidatedCourses.push({
+        gradeLabel: `GRADE ${grade}`,
+        title: course.title,
+        summary: course.summary
+      });
+      i++;
+    }
+  }
+
+  const courseEntries = consolidatedCourses.map(entry => {
+    const courseTitle = escapeHtml(entry.title || 'Untitled Course');
+    const summary = entry.summary || '';
+    const gradeLabel = entry.gradeLabel;
 
     return `
       <div class="course-entry">
-        <div class="course-entry-title">${courseTitle}</div>
+        <div class="course-entry-title">${gradeLabel}: ${courseTitle}</div>
         ${summary ? `<div class="course-entry-summary">${escapeHtml(summary)}</div>` : ''}
       </div>
     `;
