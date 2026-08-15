@@ -102,6 +102,83 @@ app.get('/health', (req, res) => {
 });
 
 /**
+ * Debug network access - test if external URLs are reachable
+ * GET /debug-network
+ */
+app.get('/debug-network', async (req, res) => {
+  const testUrls = [
+    'https://fonts.googleapis.com',
+    'https://fonts.gstatic.com',
+    'https://www.google.com',
+    'https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap'
+  ];
+
+  const results = [];
+
+  for (const url of testUrls) {
+    const start = Date.now();
+    try {
+      const response = await fetch(url, { timeout: 10000 });
+      const elapsed = Date.now() - start;
+      results.push({
+        url: url.substring(0, 60) + (url.length > 60 ? '...' : ''),
+        status: response.status,
+        elapsed_ms: elapsed,
+        success: true
+      });
+    } catch (error) {
+      results.push({
+        url: url.substring(0, 60) + (url.length > 60 ? '...' : ''),
+        error: error.message,
+        elapsed_ms: Date.now() - start,
+        success: false
+      });
+    }
+  }
+
+  // Also test if Chromium can access URLs
+  let chromiumNetworkTest = null;
+  try {
+    const browser = await puppeteer.launch({
+      args: [
+        ...chromium.args,
+        '--disable-dev-shm-usage',
+        '--disable-setuid-sandbox',
+        '--no-sandbox',
+      ],
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+    });
+
+    const page = await browser.newPage();
+    const navResult = await page.goto('https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap', {
+      timeout: 15000,
+      waitUntil: 'domcontentloaded'
+    }).then(() => ({ success: true, error: null }))
+      .catch(e => ({ success: false, error: e.message }));
+
+    await browser.close();
+
+    chromiumNetworkTest = {
+      url: 'fonts.googleapis.com (via Chromium)',
+      ...navResult
+    };
+  } catch (e) {
+    chromiumNetworkTest = {
+      url: 'fonts.googleapis.com (via Chromium)',
+      success: false,
+      error: e.message
+    };
+  }
+
+  res.json({
+    node_fetch_results: results,
+    chromium_network_test: chromiumNetworkTest
+  });
+});
+
+/**
  * Clear stuck queue and reset state
  * POST /clear-stuck
  */
