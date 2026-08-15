@@ -367,19 +367,24 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
     });
 
     console.log('Generating PDF: waiting for images to load');
-    await page.evaluate(() => {
+    const imageCheckResult = await page.evaluate(() => {
       const images = [...document.images];
-      if (images.length === 0) return Promise.resolve();
+      console.log('Image count:', images.length);
+      images.forEach((img, i) => {
+        console.log(`Image ${i}: src=${img.src.substring(0, 80)}... complete=${img.complete} naturalWidth=${img.naturalWidth}`);
+      });
+      if (images.length === 0) return 'no images';
       return Promise.all(images.map(img =>
         img.complete ? Promise.resolve() : new Promise((resolve) => {
           img.onload = resolve;
           img.onerror = resolve;
         })
-      ));
+      )).then(() => 'all images loaded');
     });
+    console.log('Image check result:', imageCheckResult);
 
-    console.log('Generating PDF: waiting briefly');
-    await page.waitForTimeout(100);
+    console.log('Generating PDF: waiting for render');
+    await page.waitForTimeout(500);
 
     const pdfOptions = {
       format: 'Letter',
