@@ -81,6 +81,25 @@ app.get('/health', (req, res) => {
 });
 
 /**
+ * Clear stuck queue and reset state
+ * POST /clear-stuck
+ */
+app.post('/clear-stuck', (req, res) => {
+  const count = requestQueue.length;
+  requestQueue.length = 0;
+  pendingResults.clear();
+  isGenerating = false;
+  console.log(`[Queue] Cleared stuck queue: ${count} items removed, isGenerating reset`);
+  res.json({
+    status: 'ok',
+    message: `Cleared ${count} queued items, reset isGenerating`,
+    queue_length: 0,
+    is_generating: false,
+    pending_results: 0
+  });
+});
+
+/**
  * Queue status endpoint - check position in queue or get result
  */
 app.get('/lesson-pdf-status', (req, res) => {
