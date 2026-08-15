@@ -25,15 +25,30 @@ const pendingResults = new Map(); // lessonId -> { status: 'queued'|'processing'
  * Called periodically and on each status check
  */
 function cleanupStaleResults() {
-  const staleThreshold = 10 * 60 * 1000; // 10 minutes
+  const staleThreshold = 15 * 60 * 1000; // 15 minutes
+  const processingThreshold = 5 * 60 * 1000; // 5 minutes for stuck processing
   const now = Date.now();
   let cleaned = 0;
   let totalEntries = 0;
   for (const [lessonId, result] of pendingResults) {
     totalEntries++;
     const age = result.timestamp ? now - result.timestamp : null;
-    const isStale = !result.timestamp || (age > staleThreshold);
-    if (isStale) {
+
+    // Clean entries that are:
+    // 1. No timestamp (old format) OR
+    // 2. Older than 15 minutes OR
+    // 3. 'processing' for more than 5 minutes (stuck)
+    let shouldClean = false;
+
+    if (!result.timestamp) {
+      shouldClean = true; // Old format
+    } else if (age > staleThreshold) {
+      shouldClean = true; // Too old
+    } else if (result.status === 'processing' && age > processingThreshold) {
+      shouldClean = true; // Stuck processing
+    }
+
+    if (shouldClean) {
       console.log(`[Queue] Cleaning stale: ${lessonId.substring(0, 8)}... status=${result.status} age=${age ? Math.round(age/1000) : 'no-ts'}s`);
       pendingResults.delete(lessonId);
       cleaned++;
@@ -392,12 +407,12 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
     console.log('Generating PDF: setting content');
     await page.setContent(html, {
-      waitUntil: ['domcontentloaded', 'networkidle0'],
-      timeout: 60000
+      waitUntil: 'domcontentloaded',
+      timeout: 30000
     });
 
-    console.log('Generating PDF: waiting');
-    await page.waitForTimeout(1000);
+    console.log('Generating PDF: waiting briefly');
+    await page.waitForTimeout(100);
 
     const pdfOptions = {
       format: 'Letter',
@@ -421,6 +436,7 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
 
     console.log('Generating PDF: closing browser');
     await browser.close();
+    browser = null;
 
     console.log(`PDF output size: ${pdf.length} bytes (${(pdf.length / 1024 / 1024).toFixed(2)} MB)`);
 
