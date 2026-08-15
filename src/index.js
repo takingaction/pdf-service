@@ -366,6 +366,18 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
       timeout: 30000
     });
 
+    console.log('Generating PDF: waiting for images to load');
+    await page.evaluate(() => {
+      const images = [...document.images];
+      if (images.length === 0) return Promise.resolve();
+      return Promise.all(images.map(img =>
+        img.complete ? Promise.resolve() : new Promise((resolve) => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        })
+      ));
+    });
+
     console.log('Generating PDF: waiting briefly');
     await page.waitForTimeout(100);
 
