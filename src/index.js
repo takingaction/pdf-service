@@ -215,6 +215,7 @@ async function processQueue() {
 
   try {
     const appUrl = process.env.APP_URL || 'https://bh-curriculum-management.vercel.app';
+    console.log(`[Queue] Building HTML for lesson ${lessonId}`);
     const html = buildLessonPDFHtml({ lesson, course, appUrl, isVersionPdf });
 
     console.log(`[Queue] HTML input size: ${html.length} bytes (${(html.length / 1024 / 1024).toFixed(2)} MB)`);
@@ -227,6 +228,8 @@ async function processQueue() {
     // Add timeout wrapper - 2 minute timeout per PDF
     const PDF_TIMEOUT_MS = 2 * 60 * 1000;
 
+    console.log(`[Queue] Starting PDF generation for lesson ${lessonId}`);
+
     const pdfPromise = generatePDF(html, safeFilename, {
       footerHtml,
       displayHeaderFooter: true
@@ -236,8 +239,8 @@ async function processQueue() {
       setTimeout(() => reject(new Error('PDF generation timed out after 2 minutes')), PDF_TIMEOUT_MS)
     );
 
+    console.log(`[Queue] Waiting for PDF generation (timeout: ${PDF_TIMEOUT_MS}ms)`);
     const { pdf } = await Promise.race([pdfPromise, timeoutPromise]);
-
     console.log(`[Queue] PDF generated successfully for lesson ${lessonId}, size: ${pdf.length} bytes`);
 
     // Store result for polling
@@ -336,6 +339,7 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
   const { footerHtml = null, displayHeaderFooter = false } = options;
 
   try {
+    console.log('Generating PDF: launching browser');
     browser = await puppeteer.launch({
       args: [
         ...chromium.args,
@@ -349,13 +353,16 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
       headless: chromium.headless,
     });
 
+    console.log('Generating PDF: browser launched, creating page');
     const page = await browser.newPage();
 
+    console.log('Generating PDF: setting content');
     await page.setContent(html, {
       waitUntil: ['domcontentloaded', 'networkidle0'],
       timeout: 60000
     });
 
+    console.log('Generating PDF: waiting');
     await page.waitForTimeout(1000);
 
     const pdfOptions = {
@@ -375,8 +382,10 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
       pdfOptions.headerTemplate = '<div></div>';
     }
 
+    console.log('Generating PDF: creating PDF');
     const pdf = await page.pdf(pdfOptions);
 
+    console.log('Generating PDF: closing browser');
     await browser.close();
 
     console.log(`PDF output size: ${pdf.length} bytes (${(pdf.length / 1024 / 1024).toFixed(2)} MB)`);
