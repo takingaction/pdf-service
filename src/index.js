@@ -444,21 +444,28 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
     });
 
     console.log('Generating PDF: waiting for images to load');
-    const imageCheckResult = await page.evaluate(() => {
+    await page.evaluate(() => {
       const images = [...document.images];
-      console.log('Image count:', images.length);
-      images.forEach((img, i) => {
-        console.log(`Image ${i}: src=${img.src.substring(0, 80)}... complete=${img.complete} naturalWidth=${img.naturalWidth}`);
-      });
-      if (images.length === 0) return 'no images';
+      if (images.length === 0) return;
       return Promise.all(images.map(img =>
         img.complete ? Promise.resolve() : new Promise((resolve) => {
           img.onload = resolve;
           img.onerror = resolve;
         })
-      )).then(() => 'all images loaded');
+      ));
     });
-    console.log('Image check result:', imageCheckResult);
+
+    console.log('Generating PDF: waiting for fonts to load');
+    await page.evaluate(async () => {
+      try {
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
+          console.log('Fonts ready:', [...document.fonts].map(f => `${f.family} ${f.status}`).join(', '));
+        }
+      } catch (e) {
+        console.log('Font check error:', e.message);
+      }
+    });
 
     console.log('Generating PDF: waiting for render');
     await page.waitForTimeout(500);

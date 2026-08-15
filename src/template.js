@@ -199,9 +199,10 @@ function buildLessonPDFHtml({ lesson, course, appUrl, isVersionPdf }) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lesson ${lesson.lesson_number}: ${escapeHtml(lesson.title || 'Untitled')}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Noto+Sans+JP&family=Noto+Sans+KR&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Noto+Sans+JP&family=Noto+Sans+KR&display=swap');
-
     @page {
       size: letter;
       margin: 0.25in 0.4in 0.7in 0.4in;
@@ -813,9 +814,10 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(course?.title || 'Course')} - Scope and Sequence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Noto+Sans+JP&family=Noto+Sans+KR&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Noto+Sans+JP&family=Noto+Sans+KR&display=swap');
-
     @page {
       size: letter;
       margin: 0.4in 0.4in 0.7in 0.4in;
@@ -1030,9 +1032,10 @@ function buildDisciplinePDFHtml({ courses, discipline, appUrl }) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${disciplineLabel} - Scope and Sequence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Noto+Sans+JP&family=Noto+Sans+KR&display=swap" rel="stylesheet">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Noto+Sans+JP&family=Noto+Sans+KR&display=swap');
-
     @page {
       size: letter;
       margin: 0.4in 0.4in 0.7in 0.4in;
