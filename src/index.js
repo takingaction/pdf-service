@@ -471,11 +471,11 @@ app.post('/pdf', async (req, res) => {
 /**
  * Lesson PDF endpoint - accepts lesson data, builds HTML, generates PDF
  * POST /lesson-pdf
- * Body: { lesson: object, course: object, filename?: string, lessonId?: string }
- * Returns: application/pdf (when processed) or 202 with queue position (when queued)
+ * Body: { lesson: object, course: object, filename?: string, isVersionPdf?: boolean }
+ * Returns: application/pdf
  */
 app.post('/lesson-pdf', async (req, res) => {
-  const { lesson, course, filename, isVersionPdf, lessonId } = req.body;
+  const { lesson, course, filename, isVersionPdf } = req.body;
 
   console.log('isVersionPdf:', isVersionPdf);
   console.log('lesson.title:', lesson?.title);
@@ -486,73 +486,36 @@ app.post('/lesson-pdf', async (req, res) => {
     return res.status(400).json({ error: 'lesson object is required' });
   }
 
-  // Generate a unique ID for this request if not provided
-  const requestId = lessonId || lesson.id || `req_${Date.now()}`;
+  try {
+    const appUrl = process.env.APP_URL || 'https://bh-curriculum-management.vercel.app';
+    const html = buildLessonPDFHtml({ lesson, course, appUrl, isVersionPdf });
 
-  // If service is busy (generating OR items ahead in queue), add to queue and return position
-  if (isGenerating || requestQueue.length > 0) {
-    // Add to queue
-    requestQueue.push({
-      lessonId: requestId,
-      lesson,
-      course,
-      filename,
-      isVersionPdf
+    console.log(`HTML input size: ${html.length} bytes (${(html.length / 1024 / 1024).toFixed(2)} MB)`);
+
+    const safeFilename = filename ||
+      `${lesson.title || `Lesson-${lesson.lesson_number}`}.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
+
+    const footerHtml = buildFooterHtml(course, lesson);
+
+    const { pdf } = await generatePDF(html, safeFilename, {
+      footerHtml,
+      displayHeaderFooter: true
     });
 
-    const position = requestQueue.length;
-    console.log(`[Queue] Service busy, lesson ${requestId} queued at position ${position}`);
+    console.log(`PDF output size: ${pdf.length} bytes (${(pdf.length / 1024 / 1024).toFixed(2)} MB)`);
 
-    // Store queued status
-    pendingResults.set(requestId, {
-      status: 'queued',
-      position,
-      queue_length: requestQueue.length - 1,
-      timestamp: Date.now()
-    });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+    res.setHeader('Content-Length', pdf.length);
+    res.send(pdf);
 
-    return res.status(202).json({
-      status: 'queued',
-      position,
-      queue_length: requestQueue.length - 1,
-      requestId,
-      message: 'PDF generation in progress. Your request is #' + position + ' in queue.'
+  } catch (error) {
+    console.error('Lesson PDF error:', error.message);
+    res.status(500).json({
+      error: 'Failed to generate lesson PDF',
+      message: error.message
     });
   }
-
-  // Queue is empty and not generating - start processing immediately
-  isGenerating = true;
-  pendingResults.set(requestId, {
-    status: 'processing',
-    position: 0,
-    queue_length: 0,
-    timestamp: Date.now()
-  });
-
-  // Add to queue (so processQueue can process it)
-  requestQueue.push({
-    lessonId: requestId,
-    lesson,
-    course,
-    filename,
-    isVersionPdf
-  });
-
-  // Process queue asynchronously
-  processQueue().then(() => {
-    // This shouldn't be reached since processQueue doesn't return
-  }).catch(err => {
-    console.error('[Queue] Unexpected error:', err);
-  });
-
-  // Return immediately - PDF will be polled via status endpoint
-  return res.status(202).json({
-    status: 'processing',
-    position: 0,
-    queue_length: 0,
-    requestId,
-    message: 'PDF generation started. Poll /lesson-pdf-status for completion.'
-  });
 });
 
 /**
