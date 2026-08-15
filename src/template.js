@@ -200,6 +200,8 @@ function buildLessonPDFHtml({ lesson, course, appUrl, isVersionPdf }) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lesson ${lesson.lesson_number}: ${escapeHtml(lesson.title || 'Untitled')}</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Noto+Sans+JP&family=Noto+Sans+KR&display=swap');
+
     @page {
       size: letter;
       margin: 0.25in 0.4in 0.7in 0.4in;
@@ -215,7 +217,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl, isVersionPdf }) {
     }
 
     body {
-      font-family: "Noto Sans CJK SC", "Noto Sans CJK JP", "Noto Sans CJK KR", Arial, Helvetica, sans-serif;
+      font-family: 'Noto Sans SC', 'Noto Sans JP', 'Noto Sans KR', Arial, Helvetica, sans-serif;
       font-size: 11pt;
       line-height: 1.4;
       margin: 0;
@@ -812,6 +814,8 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(course?.title || 'Course')} - Scope and Sequence</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Noto+Sans+JP&family=Noto+Sans+KR&display=swap');
+
     @page {
       size: letter;
       margin: 0.4in 0.4in 0.7in 0.4in;
@@ -822,12 +826,11 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
     }
 
     body {
-      font-family: "Noto Sans CJK SC", "Noto Sans CJK JP", "Noto Sans CJK KR", Arial, Helvetica, sans-serif;
+      font-family: 'Noto Sans SC', 'Noto Sans JP', 'Noto Sans KR', Arial, Helvetica, sans-serif;
       font-size: 11pt;
       line-height: 1.4;
       margin: 0;
       padding: 0;
-      color: #333;
     }
 
     /* Course Title Page */
@@ -1028,6 +1031,8 @@ function buildDisciplinePDFHtml({ courses, discipline, appUrl }) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${disciplineLabel} - Scope and Sequence</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=Noto+Sans+JP&family=Noto+Sans+KR&display=swap');
+
     @page {
       size: letter;
       margin: 0.4in 0.4in 0.7in 0.4in;
@@ -1038,7 +1043,7 @@ function buildDisciplinePDFHtml({ courses, discipline, appUrl }) {
     }
 
     body {
-      font-family: "Noto Sans CJK SC", "Noto Sans CJK JP", "Noto Sans CJK KR", Arial, Helvetica, sans-serif;
+      font-family: 'Noto Sans SC', 'Noto Sans JP', 'Noto Sans KR', Arial, Helvetica, sans-serif;
       font-size: 11pt;
       line-height: 1.4;
       margin: 0;
