@@ -225,22 +225,13 @@ async function processQueue() {
 
     const footerHtml = buildFooterHtml(course, lesson);
 
-    // Add timeout wrapper - 2 minute timeout per PDF
-    const PDF_TIMEOUT_MS = 2 * 60 * 1000;
-
     console.log(`[Queue] Starting PDF generation for lesson ${lessonId}`);
 
-    const pdfPromise = generatePDF(html, safeFilename, {
+    const { pdf } = await generatePDF(html, safeFilename, {
       footerHtml,
       displayHeaderFooter: true
     });
 
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('PDF generation timed out after 2 minutes')), PDF_TIMEOUT_MS)
-    );
-
-    console.log(`[Queue] Waiting for PDF generation (timeout: ${PDF_TIMEOUT_MS}ms)`);
-    const { pdf } = await Promise.race([pdfPromise, timeoutPromise]);
     console.log(`[Queue] PDF generated successfully for lesson ${lessonId}, size: ${pdf.length} bytes`);
 
     // Store result for polling
