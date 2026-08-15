@@ -70,13 +70,19 @@ app.get('/health', (req, res) => {
       position: result.position
     });
   }
+
+  // Detect stuck state: isGenerating true but queue empty (PDF generation hung)
+  const stuck = isGenerating && requestQueue.length === 0 && pendingResults.size === 0;
+
   res.json({
     status: 'ok',
     service: 'pdf-service',
     queue_length: requestQueue.length,
     is_generating: isGenerating,
     pending_results: pendingResults.size,
-    pending_details: pendingDetails
+    pending_details: pendingDetails,
+    stuck_warning: stuck,
+    message: stuck ? 'Queue may be stuck - use POST /force-reset or /skip-current' : undefined
   });
 });
 
@@ -96,6 +102,34 @@ app.post('/clear-stuck', (req, res) => {
     queue_length: 0,
     is_generating: false,
     pending_results: 0
+  });
+});
+
+/**
+ * Skip current stuck PDF and continue processing next in queue
+ * POST /skip-current
+ */
+app.post('/skip-current', (req, res) => {
+  if (!isGenerating) {
+    return res.status(400).json({ error: 'No PDF currently being generated' });
+  }
+
+  const pendingBefore = pendingResults.size;
+  isGenerating = false;
+
+  // Clean up any pending results that might be stuck
+  pendingResults.clear();
+
+  console.log(`[Queue] Skipped current PDF, queue length: ${requestQueue.length}`);
+
+  // Trigger processing next item
+  processQueue();
+
+  res.json({
+    status: 'ok',
+    message: 'Skipped current PDF, queue processing continued',
+    queue_length: requestQueue.length,
+    is_generating: isGenerating
   });
 });
 
@@ -190,10 +224,19 @@ async function processQueue() {
 
     const footerHtml = buildFooterHtml(course, lesson);
 
-    const { pdf } = await generatePDF(html, safeFilename, {
+    // Add timeout wrapper - 2 minute timeout per PDF
+    const PDF_TIMEOUT_MS = 2 * 60 * 1000;
+
+    const pdfPromise = generatePDF(html, safeFilename, {
       footerHtml,
       displayHeaderFooter: true
     });
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('PDF generation timed out after 2 minutes')), PDF_TIMEOUT_MS)
+    );
+
+    const { pdf } = await Promise.race([pdfPromise, timeoutPromise]);
 
     console.log(`[Queue] PDF generated successfully for lesson ${lessonId}, size: ${pdf.length} bytes`);
 
