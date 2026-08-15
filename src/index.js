@@ -213,6 +213,8 @@ async function processQueue() {
     existingResult.status = 'processing';
   }
 
+  let timedOut = false;
+
   try {
     const appUrl = process.env.APP_URL || 'https://bh-curriculum-management.vercel.app';
     console.log(`[Queue] Building HTML for lesson ${lessonId}`);
@@ -227,10 +229,47 @@ async function processQueue() {
 
     console.log(`[Queue] Starting PDF generation for lesson ${lessonId}`);
 
-    const { pdf } = await generatePDF(html, safeFilename, {
+    // Use timeout to prevent hanging forever
+    const PDF_TIMEOUT_MS = 120000; // 2 minutes
+    let timeoutId;
+
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
+        timedOut = true;
+        console.log(`[Queue] PDF generation timed out after ${PDF_TIMEOUT_MS}ms for lesson ${lessonId}`);
+        reject(new Error('PDF generation timed out after 2 minutes'));
+      }, PDF_TIMEOUT_MS);
+    });
+
+    const pdfPromise = generatePDF(html, safeFilename, {
       footerHtml,
       displayHeaderFooter: true
     });
+
+    let pdf;
+    try {
+      const result = await Promise.race([pdfPromise, timeoutPromise]);
+      pdf = result.pdf;
+    } catch (raceError) {
+      // Clear timeout
+      clearTimeout(timeoutId);
+
+      // If we timed out, wait a bit for the background process to settle
+      if (timedOut) {
+        console.log(`[Queue] Waiting for background process to clean up...`);
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+      throw raceError;
+    }
+
+    // Clear timeout if we got here before it fired
+    clearTimeout(timeoutId);
+
+    // Don't store result if we timed out (background process may still be running)
+    if (timedOut) {
+      console.log(`[Queue] Skipping result storage due to timeout`);
+      return;
+    }
 
     console.log(`[Queue] PDF generated successfully for lesson ${lessonId}, size: ${pdf.length} bytes`);
 
@@ -245,12 +284,16 @@ async function processQueue() {
   } catch (error) {
     console.error(`[Queue] Error generating PDF for lesson ${lessonId}:`, error.message);
 
-    // Store failed result
-    pendingResults.set(lessonId, {
-      status: 'failed',
-      error: error.message,
-      timestamp: Date.now()
-    });
+    // Store failed result (unless we timed out and background is still running)
+    if (!timedOut) {
+      pendingResults.set(lessonId, {
+        status: 'failed',
+        error: error.message,
+        timestamp: Date.now()
+      });
+    } else {
+      console.log(`[Queue] Skipping failure storage due to timeout`);
+    }
   } finally {
     isGenerating = false;
     processQueue(); // Process next in queue
