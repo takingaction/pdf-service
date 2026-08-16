@@ -16,6 +16,9 @@ const PRIORITY = {
   BATCH: 9,
 };
 
+const JOB_CLEANUP_MS = 30000;
+const RESULT_CLEANUP_MS = 60000;
+
 function generateJobId() {
   return `job_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
@@ -42,6 +45,26 @@ function getQueuePosition(job) {
   return pending.findIndex(j => j.id === job.id) + 1;
 }
 
+function cleanupJob(job) {
+  if (job.cleanupTimeout) {
+    clearTimeout(job.cleanupTimeout);
+    job.cleanupTimeout = null;
+  }
+  if (job.resultTimeout) {
+    clearTimeout(job.resultTimeout);
+    job.resultTimeout = null;
+  }
+  job.result = null;
+}
+
+function removeJob(job) {
+  cleanupJob(job);
+  const index = queue.indexOf(job);
+  if (index > -1) {
+    queue.splice(index, 1);
+  }
+}
+
 function submitJob(pdfType, payload, priority = 5) {
   const job = {
     id: generateJobId(),
@@ -54,6 +77,8 @@ function submitJob(pdfType, payload, priority = 5) {
     completed_at: null,
     result: null,
     error: null,
+    cleanupTimeout: null,
+    resultTimeout: null,
   };
   queue.push(job);
   processQueue();
@@ -65,6 +90,7 @@ function cancelJob(jobId) {
   if (!job) return false;
   if (job.status === 'processing') return false;
   job.status = 'cancelled';
+  removeJob(job);
   return true;
 }
 
@@ -142,6 +168,14 @@ async function processQueue() {
       job.result = result;
       job.status = 'completed';
       job.completed_at = new Date().toISOString();
+
+      job.resultTimeout = setTimeout(() => {
+        job.result = null;
+      }, RESULT_CLEANUP_MS);
+
+      job.cleanupTimeout = setTimeout(() => {
+        removeJob(job);
+      }, JOB_CLEANUP_MS);
     } else {
       throw new Error('No job processor configured');
     }
@@ -149,6 +183,10 @@ async function processQueue() {
     job.error = error.message;
     job.status = 'failed';
     job.completed_at = new Date().toISOString();
+
+    job.cleanupTimeout = setTimeout(() => {
+      removeJob(job);
+    }, JOB_CLEANUP_MS);
   } finally {
     currentJob = null;
     isProcessing = false;
