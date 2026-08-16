@@ -167,6 +167,141 @@ app.delete('/queue/cancel/:jobId', (req, res) => {
 });
 
 /**
+ * Direct Lesson PDF endpoint (bypasses queue)
+ * POST /lesson-pdf
+ * Body: { lesson: object, course: object, filename?: string, isVersionPdf?: boolean }
+ * Returns: application/pdf
+ */
+app.post('/lesson-pdf', async (req, res) => {
+  const { lesson, course, filename, isVersionPdf } = req.body;
+
+  if (!lesson) {
+    return res.status(400).json({ error: 'lesson object is required' });
+  }
+
+  try {
+    const appUrl = process.env.APP_URL || 'https://bh-curriculum-management.vercel.app';
+    const html = buildLessonPDFHtml({ lesson, course, appUrl, isVersionPdf });
+
+    console.log(`[Direct] Lesson PDF HTML input size: ${html.length} bytes`);
+
+    const safeFilename = filename ||
+      `${lesson.title || `Lesson-${lesson.lesson_number}`}.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
+
+    const footerHtml = buildFooterHtml(course, lesson);
+
+    const { pdf } = await generatePDF(html, safeFilename, {
+      footerHtml,
+      displayHeaderFooter: true
+    });
+
+    console.log(`[Direct] Lesson PDF output size: ${pdf.length} bytes`);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+    res.setHeader('Content-Length', pdf.length);
+    res.send(pdf);
+
+  } catch (error) {
+    console.error('[Direct] Lesson PDF error:', error.message);
+    res.status(500).json({
+      error: 'Failed to generate lesson PDF',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * Direct Course PDF endpoint (bypasses queue)
+ * POST /course-pdf
+ * Body: { course: object, lessons: array, filename?: string }
+ * Returns: application/pdf
+ */
+app.post('/course-pdf', async (req, res) => {
+  const { course, lessons, filename } = req.body;
+
+  if (!course) {
+    return res.status(400).json({ error: 'course object is required' });
+  }
+
+  try {
+    const appUrl = process.env.APP_URL || 'https://bh-curriculum-management.vercel.app';
+    const html = buildCoursePDFHtml({ course, lessons, appUrl });
+
+    console.log(`[Direct] Course PDF HTML input size: ${html.length} bytes`);
+
+    const safeFilename = filename ||
+      `${course.title || 'course'}-scope-and-sequence.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
+
+    const footerHtml = buildCourseFooterHtml(course);
+
+    const { pdf } = await generatePDF(html, safeFilename, {
+      footerHtml,
+      displayHeaderFooter: true
+    });
+
+    console.log(`[Direct] Course PDF output size: ${pdf.length} bytes`);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+    res.setHeader('Content-Length', pdf.length);
+    res.send(pdf);
+
+  } catch (error) {
+    console.error('[Direct] Course PDF error:', error.message);
+    res.status(500).json({
+      error: 'Failed to generate course PDF',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * Direct Discipline PDF endpoint (bypasses queue)
+ * POST /discipline-pdf
+ * Body: { courses: array, discipline: string, filename?: string }
+ * Returns: application/pdf
+ */
+app.post('/discipline-pdf', async (req, res) => {
+  const { courses, discipline, filename } = req.body;
+
+  if (!courses || !discipline) {
+    return res.status(400).json({ error: 'courses array and discipline are required' });
+  }
+
+  try {
+    const appUrl = process.env.APP_URL || 'https://bh-curriculum-management.vercel.app';
+    const html = buildDisciplinePDFHtml({ courses, discipline, appUrl });
+
+    console.log(`[Direct] Discipline PDF HTML input size: ${html.length} bytes`);
+
+    const safeFilename = filename ||
+      `${discipline.toLowerCase()}-scope-and-sequence.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
+
+    const footerHtml = buildDisciplineFooterHtml(discipline);
+
+    const { pdf } = await generatePDF(html, safeFilename, {
+      footerHtml,
+      displayHeaderFooter: true
+    });
+
+    console.log(`[Direct] Discipline PDF output size: ${pdf.length} bytes`);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
+    res.setHeader('Content-Length', pdf.length);
+    res.send(pdf);
+
+  } catch (error) {
+    console.error('[Direct] Discipline PDF error:', error.message);
+    res.status(500).json({
+      error: 'Failed to generate discipline PDF',
+      message: error.message
+    });
+  }
+});
+
+/**
  * Debug network access - test if external URLs are reachable
  * GET /debug-network
  */
