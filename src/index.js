@@ -447,17 +447,28 @@ async function generatePDF(html, filename = 'document.pdf', options = {}) {
       ));
     });
 
-    console.log('Generating PDF: waiting for fonts to load');
-    await page.evaluate(async () => {
-      try {
-        if (document.fonts && document.fonts.ready) {
-          await document.fonts.ready;
-          console.log('Fonts ready:', [...document.fonts].map(f => `${f.family} ${f.status}`).join(', '));
+    // Only wait for fonts if HTML contains CJK fonts (Noto Sans SC/JP/KR)
+    // Add 5-second timeout to prevent blocking when fonts are slow/unavailable
+    const needsCjkFonts = html.includes('Noto Sans SC') || html.includes('Noto Sans JP') || html.includes('Noto Sans KR');
+    if (needsCjkFonts) {
+      console.log('Generating PDF: waiting for CJK fonts to load (5s timeout)');
+      await page.evaluate(async () => {
+        try {
+          if (document.fonts && document.fonts.ready) {
+            // Race document.fonts.ready against a 5-second timeout
+            await Promise.race([
+              document.fonts.ready,
+              new Promise(resolve => setTimeout(resolve, 5000))
+            ]);
+            console.log('Fonts ready:', [...document.fonts].map(f => `${f.family} ${f.status}`).join(', '));
+          }
+        } catch (e) {
+          console.log('Font check error:', e.message);
         }
-      } catch (e) {
-        console.log('Font check error:', e.message);
-      }
-    });
+      });
+    } else {
+      console.log('Generating PDF: skipping font wait (no CJK fonts detected)');
+    }
 
     console.log('Generating PDF: waiting for render');
     await page.waitForTimeout(500);

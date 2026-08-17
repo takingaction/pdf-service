@@ -205,7 +205,7 @@ function buildLessonPDFHtml({ lesson, course, appUrl, isVersionPdf }) {
   <style>
     @page {
       size: letter;
-      margin: 0.25in 0.4in 0.7in 0.4in;
+      margin: 0.5in 0.4in 0.7in 0.4in;
     }
 
     @page :first {
@@ -820,7 +820,7 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
   <style>
     @page {
       size: letter;
-      margin: 0.4in 0.4in 0.7in 0.4in;
+      margin: 0.5in 0.4in 0.7in 0.4in;
     }
 
     * {
@@ -835,7 +835,7 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
       padding: 0;
     }
 
-    /* Course Title Page */
+    /* Course title page */
     .course-title-page {
       padding-bottom: 0;
     }
@@ -1038,7 +1038,7 @@ function buildDisciplinePDFHtml({ courses, discipline, appUrl }) {
   <style>
     @page {
       size: letter;
-      margin: 0.4in 0.4in 0.7in 0.4in;
+      margin: 0.5in 0.4in 0.7in 0.4in;
     }
 
     * {
