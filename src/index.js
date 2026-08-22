@@ -35,8 +35,8 @@ setProcessCallback(async (job) => {
       break;
     }
     case 'course': {
-      const { course, lessons, filename } = payload;
-      html = buildCoursePDFHtml({ course, lessons, appUrl });
+      const { course, lessons, units, filename } = payload;
+      html = buildCoursePDFHtml({ course, lessons, units, appUrl });
       safeFilename = filename ||
         `${course.discipline.toLowerCase()}-${course.grade.toLowerCase()}-scope-and-sequence.pdf`.replace(/[^a-zA-Z0-9\-_. ]/g, '');
       footerHtml = buildCourseFooterHtml(course);
@@ -218,7 +218,7 @@ app.post('/lesson-pdf', async (req, res) => {
  * Returns: application/pdf
  */
 app.post('/course-pdf', async (req, res) => {
-  const { course, lessons, filename } = req.body;
+  const { course, lessons, units, filename } = req.body;
 
   if (!course) {
     return res.status(400).json({ error: 'course object is required' });
@@ -226,7 +226,7 @@ app.post('/course-pdf', async (req, res) => {
 
   try {
     const appUrl = process.env.APP_URL || 'https://bh-curriculum-management.vercel.app';
-    const html = buildCoursePDFHtml({ course, lessons, appUrl });
+    const html = buildCoursePDFHtml({ course, lessons, units, appUrl });
 
     console.log(`[Direct] Course PDF HTML input size: ${html.length} bytes`);
 

@@ -767,33 +767,62 @@ function buildCourseTitlePage({ course, appUrl }) {
 }
 
 /**
- * Build lesson entries for Course PDF
+ * Build lesson entries for Course PDF, interleaving units
  */
-function buildLessonEntriesHtml({ lessons }) {
+function buildLessonEntriesHtml({ lessons, units }) {
   if (!lessons || lessons.length === 0) return '';
 
-  return lessons.map(lesson => {
-    const lessonNum = lesson.lesson_number || '?';
-    const lessonTitle = escapeHtml(lesson.title || 'Untitled');
-    const contentText = extractContentSection(lesson.learning_objectives);
+  const items = [];
 
-    return `
-      <div class="lesson-entry">
-        <div class="lesson-entry-title">
-          <span class="lesson-number">CLASS ${lessonNum}:</span> ${lessonTitle}
+  lessons.forEach(lesson => {
+    const unitsBefore = (units || []).filter(
+      u => u.display_order < lesson.display_order &&
+      !items.some(i => i.type === 'unit' && i.data.id === u.id)
+    );
+    unitsBefore.forEach(unit => {
+      items.push({ type: 'unit', data: unit });
+    });
+    items.push({ type: 'lesson', data: lesson });
+  });
+
+  (units || []).forEach(unit => {
+    if (!items.some(i => i.type === 'unit' && i.data.id === unit.id)) {
+      items.push({ type: 'unit', data: unit });
+    }
+  });
+
+  return items.map(item => {
+    if (item.type === 'unit') {
+      const unit = item.data;
+      return `
+        <div class="unit-header">
+          ${escapeHtml(unit.title)}
         </div>
-        ${contentText ? `<div class="lesson-entry-content">${escapeHtml(contentText)}</div>` : ''}
-      </div>
-    `;
+      `;
+    } else {
+      const lesson = item.data;
+      const lessonNum = lesson.lesson_number || '?';
+      const lessonTitle = escapeHtml(lesson.title || 'Untitled');
+      const contentText = extractContentSection(lesson.learning_objectives);
+
+      return `
+        <div class="lesson-entry">
+          <div class="lesson-entry-title">
+            <span class="lesson-number">CLASS ${lessonNum}:</span> ${lessonTitle}
+          </div>
+          ${contentText ? `<div class="lesson-entry-content">${escapeHtml(contentText)}</div>` : ''}
+        </div>
+      `;
+    }
   }).join('');
 }
 
 /**
  * Build complete HTML document for a course Scope and Sequence PDF
  */
-function buildCoursePDFHtml({ course, lessons, appUrl }) {
+function buildCoursePDFHtml({ course, lessons, units, appUrl }) {
   const titlePage = buildCourseTitlePage({ course, appUrl });
-  const lessonEntries = buildLessonEntriesHtml({ lessons });
+  const lessonEntries = buildLessonEntriesHtml({ lessons, units });
 
   const getImageUrl = (filename) => {
     return appUrl
@@ -910,6 +939,17 @@ function buildCoursePDFHtml({ course, lessons, appUrl }) {
       line-height: 1.5;
       padding-left: 0;
       color: #444;
+    }
+
+    /* Unit Header */
+    .unit-header {
+      background-color: #e37c64;
+      color: white;
+      font-size: 12pt;
+      font-weight: bold;
+      padding: 8px 12px;
+      margin: 16px 0 8px 0;
+      break-inside: avoid;
     }
 
     /* Footer handling via Puppeteer */
